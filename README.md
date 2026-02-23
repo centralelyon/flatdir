@@ -47,8 +47,51 @@ python -m flatdir . --limit 10
 python -m flatdir . --depth 2
 ```
 
-`--output FILE` to specify the output file:
+`--output FILE` to write the result to a file:
 
 ```bash
 python -m flatdir . --output flat.json
+```
+
+`--fields FILE` to add custom fields via a plugin file:
+
+```bash
+python -m flatdir . --fields my_fields.py
+```
+
+The plugin file is a Python file where each public function becomes a JSON field.
+The function receives the file `Path` and returns a value:
+
+```python
+# my_fields.py
+from pathlib import Path
+
+def ext(p: Path) -> str:
+    return p.suffix
+
+def line_count(p: Path) -> int:
+    return len(p.read_text().splitlines())
+```
+
+Output:
+
+```json
+[
+    {
+        "name": "README.md",
+        "type": "file",
+        "mtime": "Mon, 23 Feb 2026 13:12:54 GMT",
+        "size": 835,
+        "ext": ".md",
+        "line_count": 54
+    }
+]
+```
+
+An example extension is included in `src/flatdir/extensions/filename_length.py`.
+
+All options can be combined:
+
+```bash
+python -m flatdir . --depth 1 --limit 10 --fields my_fields.py --output result.json
 ```

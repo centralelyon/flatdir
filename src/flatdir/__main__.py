@@ -1,13 +1,16 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
-Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [path]
+Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE] [path]
 """
+
+from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
 
 from .listing import list_entries
+from .plugins import load_fields_file
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -46,6 +49,21 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --output requires a file path argument", file=sys.stderr)
             return 1
 
+    # parse --fields flag if present
+    fields = None
+    if "--fields" in argv:
+        try:
+            idx = argv.index("--fields")
+            fields_path = argv[idx + 1]
+            fields = load_fields_file(fields_path)
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --fields requires a file path argument", file=sys.stderr)
+            return 1
+        except (FileNotFoundError, ImportError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+
     path = Path(argv[0]) if argv else Path(".")
 
     # error in case of missing path or path is not a directory
@@ -54,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     # generate the actual list of entries to be returned as JSON
-    entries = list_entries(path, limit=limit, depth=depth)
+    entries = list_entries(path, limit=limit, depth=depth, fields=fields)
 
     # write JSON to output file or stdout
     if output is not None:

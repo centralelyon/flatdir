@@ -3,13 +3,18 @@
 Each entry is a dict with keys: name, type, mtime, size.
 """
 
+from __future__ import annotations
+
 import os
 import time
 from pathlib import Path
 
 
 def list_entries(
-    root: Path, limit: int | None = None, depth: int | None = None
+    root: Path,
+    limit: int | None = None,
+    depth: int | None = None,
+    fields: dict[str, object] | None = None,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
@@ -31,15 +36,20 @@ def list_entries(
             mtime_str = time.strftime("%a, %d %b %Y %H:%M:%S GMT", mtime)
             size = int(st.st_size)
 
-            # append entry to list
-            entries.append(
-                {
-                    "name": str(rel),
-                    "type": "file",
-                    "mtime": mtime_str,
-                    "size": size,
-                }
-            )
+            # append entry to list with default fields
+            entry: dict[str, object] = {
+                "name": str(rel),
+                "type": "file",
+                "mtime": mtime_str,
+                "size": size,
+            }
+
+            # apply custom field functions
+            if fields:
+                for field_name, func in fields.items():
+                    entry[field_name] = func(p)
+
+            entries.append(entry)
 
     # return a sorted list of entries
     entries.sort(key=lambda e: str(e["name"]))
