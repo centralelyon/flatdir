@@ -4,7 +4,6 @@ from flatdir import listing
 
 
 def test_outputs_valid_json(tmp_path):
-
     # create a small directory with one file
     sub = tmp_path / "sub"
     sub.mkdir()
