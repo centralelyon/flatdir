@@ -1,6 +1,6 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
-Usage: python -m flatdir [--limit N] [--depth N] [path]
+Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [path]
 """
 
 import json
@@ -35,6 +35,17 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --depth requires a valid integer argument", file=sys.stderr)
             return 1
 
+    # parse --output flag if present
+    output: str | None = None
+    if "--output" in argv:
+        try:
+            idx = argv.index("--output")
+            output = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except (IndexError, ValueError):
+            print("error: --output requires a file path argument", file=sys.stderr)
+            return 1
+
     path = Path(argv[0]) if argv else Path(".")
 
     # error in case of missing path or path is not a directory
@@ -45,9 +56,14 @@ def main(argv: list[str] | None = None) -> int:
     # generate the actual list of entries to be returned as JSON
     entries = list_entries(path, limit=limit, depth=depth)
 
-    # returns an indented JSON list of entries to stdout
-    json.dump(entries, sys.stdout, ensure_ascii=False, indent=4)
-    _ = sys.stdout.write("\n")
+    # write JSON to output file or stdout
+    if output is not None:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(entries, f, ensure_ascii=False, indent=4)
+            f.write("\n")
+    else:
+        json.dump(entries, sys.stdout, ensure_ascii=False, indent=4)
+        _ = sys.stdout.write("\n")
     return 0
 
 

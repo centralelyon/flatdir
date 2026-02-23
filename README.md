@@ -1,12 +1,6 @@
 # flatdir
 
-`flatdir` scans a directory tree and generates a flat JSON file with metadata for each entry.
-
-## Installation
-
-# flatdir
-
-`flatdir` scans a directory tree and generates a flat JSON file with metadata for each entry.
+A Python library to create a flat JSON index of files and directories
 
 ## Installation
 
@@ -41,8 +35,20 @@ Returns a JSON file with metadata for each entry in the current directory and it
 ]
 ```
 
-Add `--limit N` to limit the number of entries processed:
+`--limit N` to limit the number of entries processed:
 
 ```bash
 python -m flatdir . --limit 10
+```
+
+`--depth N` to limit the depth of the directory tree:
+
+```bash
+python -m flatdir . --depth 2
+```
+
+`--output FILE` to specify the output file:
+
+```bash
+python -m flatdir . --output flat.json
 ```

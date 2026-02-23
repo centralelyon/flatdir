@@ -1,6 +1,6 @@
 [project]
 name = "flatdir"
-description = "Your project description here."
+description = "A Python library to create a flat JSON index of files and directories."
 readme = "docs/index.md"
 requires-python = ">=3.10,<4"
 license = "MIT"
@@ -12,13 +12,14 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Typing :: Typed",
 ]
 dependencies = []
 dynamic = ["version"]
 
 [tool.setuptools.dynamic]
-version = {attr = "your_package.__version__"}
+version = {attr = "flatdir.__version__"}
 
 [project.urls]
 Homepage = "https://github.com/romsson/flatdir"
@@ -31,10 +32,6 @@ tests = [
   "pytest-mock>=3,<4",
   "pytest>=8.1.1,<9",
 ]
-
-[build-system]
-requires = ["hatchling>=1.26.3,<2"]
-build-backend = "hatchling.build"
 
 [tool.coverage.run]
 command_line = "-m pytest"
