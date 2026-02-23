@@ -49,4 +49,3 @@ def list_entries(
         entries = entries[:limit]
 
     return entries
-
