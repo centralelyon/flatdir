@@ -10,7 +10,7 @@ from pathlib import Path
 from .listing import list_entries
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
     path = Path(argv[0]) if argv else Path(".")
 
@@ -24,7 +24,7 @@ def main(argv=None) -> int:
 
     # returns an indented JSON list of entries to stdout
     json.dump(entries, sys.stdout, ensure_ascii=False, indent=4)
-    sys.stdout.write("\n")
+    _ = sys.stdout.write("\n")
     return 0
 
 

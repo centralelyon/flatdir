@@ -33,5 +33,5 @@ def list_entries(root: Path) -> list[dict[str, object]]:
             )
 
     # return a sorted list of entries
-    entries.sort(key=lambda e: e["name"])
+    entries.sort(key=lambda e: str(e["name"]))
     return entries
