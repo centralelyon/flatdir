@@ -1,6 +1,6 @@
 # flatdir
 
-A Python library to create a flat JSON index of files and directories
+A Python library to create a flat JSON index of files and directories.
 
 ## Installation
 
@@ -23,7 +23,7 @@ python -m flatdir .
 Returns a JSON file with metadata for each entry in the current directory and its subdirectories.
 
 ```json
-(base) rvuillem@Romains-MacBook-Pro flatdir % python -m flatdir .
+python -m flatdir .
 [
     {
         "name": ".DS_Store",

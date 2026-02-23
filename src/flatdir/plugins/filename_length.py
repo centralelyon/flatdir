@@ -1,5 +1,7 @@
 """Example plugin: adds the length of the filename to each entry."""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 
