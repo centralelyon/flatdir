@@ -99,6 +99,7 @@
     "vendorizes",
     "venv",
     "virtualenv",
-    "virtualenvs"
+    "virtualenvs",
+    "flatdir"
   ]
 }

@@ -4,11 +4,17 @@
 
 ## Installation
 
+# flatdir
+
+`flatdir` scans a directory tree and generates a flat JSON file with metadata for each entry.
+
+## Installation
+
 ```bash
 pip install -e .
 ```
 
-Or from pypi:
+Or from PyPI:
 
 ```bash
 pip install flatdir
@@ -17,5 +23,5 @@ pip install flatdir
 ## Usage
 
 ```bash
-python -m flatdir . 
+python -m flatdir .
 ```
