@@ -1,6 +1,6 @@
 # flatdir
 
-`flatdir` scans a directory tree and generates a flat JSON file with metadata for each entry (eg file, folder).
+`flatdir` scans a directory and generates a flat JSON file with metadata for each entry (eg file, folder).
 
 ## Installation
 

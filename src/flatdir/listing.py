@@ -1,18 +1,21 @@
+"""List entries in a directory and return metadata as a list of dict.
+
+Each entry is a dict with keys: name, type, mtime, size.
+"""
+
 import os
 import time
 from pathlib import Path
+from typing import Dict, List
 
-""" 
-List entries in a directory and return metadata as a list of dict.
-"""
-def list_entries(root: Path):
-    entries = []
+
+def list_entries(root: Path) -> List[Dict[str, object]]:
+    entries: List[Dict[str, object]] = []
     root = root.resolve()
     for dirpath, _, filenames in os.walk(root):
         base = Path(dirpath)
         for filename in filenames:
-
-            # get metadata for file or folder
+            # get metadata for file
             p = (base / filename).resolve()
             rel = p.relative_to(root)
             st = p.stat()
@@ -21,12 +24,14 @@ def list_entries(root: Path):
             size = int(st.st_size)
 
             # append entry to list
-            entries.append({
-                "name": str(rel),
-                "type": "file",
-                "mtime": mtime_str,
-                "size": size,
-            })
+            entries.append(
+                {
+                    "name": str(rel),
+                    "type": "file",
+                    "mtime": mtime_str,
+                    "size": size,
+                }
+            )
 
     # return a sorted list of entries
     entries.sort(key=lambda e: e["name"])
