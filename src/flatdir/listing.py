@@ -16,7 +16,10 @@ def list_entries(root: Path) -> list[dict[str, object]]:
         for filename in filenames:
             # get metadata for file
             p = (base / filename).resolve()
-            rel = p.relative_to(root)
+            try:
+                rel = p.relative_to(root)
+            except ValueError:
+                rel = Path(os.path.relpath(str(p), str(root)))
             st = p.stat()
             mtime = time.gmtime(st.st_mtime)
             mtime_str = time.strftime("%a, %d %b %Y %H:%M:%S GMT", mtime)
