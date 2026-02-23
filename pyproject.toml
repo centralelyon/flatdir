@@ -17,6 +17,9 @@ classifiers = [
 dependencies = []
 dynamic = ["version"]
 
+[tool.setuptools.dynamic]
+version = {attr = "your_package.__version__"}
+
 [project.urls]
 Homepage = "https://github.com/romsson/flatdir"
 Repository = "https://github.com/romsson/flatdir"
