@@ -46,4 +46,3 @@ Add `--limit N` to limit the number of entries processed:
 ```bash
 python -m flatdir . --limit 10
 ```
-
