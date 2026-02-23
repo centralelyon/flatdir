@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 
-def list_entries(root: Path) -> list[dict[str, object]]:
+def list_entries(root: Path, limit: int | None = None) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
     for dirpath, _, filenames in os.walk(root):
@@ -37,4 +37,10 @@ def list_entries(root: Path) -> list[dict[str, object]]:
 
     # return a sorted list of entries
     entries.sort(key=lambda e: str(e["name"]))
+    
+    # apply limit if provided
+    if limit is not None and limit >= 0:
+        entries = entries[:limit]
+    
     return entries
+
