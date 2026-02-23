@@ -1,7 +1,7 @@
 import packaging.version
 
-import template_python
+import flatdir
 
 
 def test_version_is_valid() -> None:
-    _ = packaging.version.parse(template_python.__version__)
+    _ = packaging.version.parse(flatdir.__version__)

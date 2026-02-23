@@ -4,8 +4,8 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.inlinehilite
   - pymdownx.magiclink:
-      user: br3ndonland
-      repo: template-python
+      user: romsson
+      repo: flatdir
       repo_url_shorthand: true
   - pymdownx.snippets
   - pymdownx.superfences
@@ -17,9 +17,9 @@ markdown_extensions:
       toc_depth: 3
 nav:
   - "index.md"
-repo_name: br3ndonland/template-python
-repo_url: https://github.com/br3ndonland/template-python
-site_name: template-python docs
+repo_name: romsson/flatdir
+repo_url: https://github.com/romsson/flatdir
+site_name: flatdir docs
 site_url: ""
 theme:
   favicon: assets/images/favicon.png

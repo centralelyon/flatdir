@@ -1,5 +1,5 @@
 [project]
-name = "template-python"
+name = "flatdir"
 description = "Your project description here."
 readme = "docs/index.md"
 requires-python = ">=3.10,<4"
@@ -18,8 +18,8 @@ dependencies = []
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/br3ndonland/template-python"
-Repository = "https://github.com/br3ndonland/template-python"
+Homepage = "https://github.com/romsson/flatdir"
+Repository = "https://github.com/romsson/flatdir"
 
 [dependency-groups]
 checks = [
@@ -50,17 +50,17 @@ show_missing = true
 
 [tool.coverage.run]
 command_line = "-m pytest"
-source_pkgs = ["template_python", "tests"]
+source_pkgs = ["flatdir", "tests"]
 
 [tool.coverage.paths]
-template_python = ["src/template_python"]
+flatdir = ["src/flatdir"]
 tests = ["tests"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/template_python"]
+packages = ["src/flatdir"]
 
 [tool.hatch.envs.ci]
 builder = true
@@ -103,7 +103,7 @@ dev-mode = false
 dependency-groups = []
 
 [tool.hatch.version]
-path = "src/template_python/__init__.py"
+path = "src/flatdir/__init__.py"
 
 [tool.pytest.ini_options]
 addopts = "-q"
