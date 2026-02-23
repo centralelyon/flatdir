@@ -6,11 +6,10 @@ Each entry is a dict with keys: name, type, mtime, size.
 import os
 import time
 from pathlib import Path
-from typing import Dict, List
 
 
-def list_entries(root: Path) -> List[Dict[str, object]]:
-    entries: List[Dict[str, object]] = []
+def list_entries(root: Path) -> list[dict[str, object]]:
+    entries: list[dict[str, object]] = []
     root = root.resolve()
     for dirpath, _, filenames in os.walk(root):
         base = Path(dirpath)
