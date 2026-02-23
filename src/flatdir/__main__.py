@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 from .listing import list_entries
-from .plugins import load_fields_file
+from .plugins_loader import load_fields_file
 
 
 def main(argv: list[str] | None = None) -> int:

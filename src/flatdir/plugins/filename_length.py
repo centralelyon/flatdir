@@ -3,6 +3,6 @@
 from pathlib import Path
 
 
-def filename_length(p: Path) -> int:
+def filename_length(path: Path, root: Path) -> int:
     """Return the number of characters in the filename (including extension)."""
-    return len(p.name)
+    return len(path.name)

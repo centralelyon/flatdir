@@ -5,7 +5,7 @@ from pathlib import Path
 
 from flatdir.__main__ import main
 from flatdir.listing import list_entries
-from flatdir.plugins import load_fields_file
+from flatdir.plugins_loader import load_fields_file
 
 
 # -- plugin loader tests --
@@ -16,9 +16,9 @@ def test_load_fields_file_extracts_public_functions(tmp_path: Path):
     fields_file = tmp_path / "my_fields.py"
     fields_file.write_text(
         "from pathlib import Path\n"
-        "def ext(p: Path) -> str:\n"
-        "    return p.suffix\n"
-        "def _private(p: Path) -> str:\n"
+        "def ext(path: Path, root: Path) -> str:\n"
+        "    return path.suffix\n"
+        "def _private(path: Path, root: Path) -> str:\n"
         "    return 'hidden'\n"
     )
     fields = load_fields_file(str(fields_file))
@@ -33,8 +33,8 @@ def test_load_fields_file_ignores_classes(tmp_path: Path):
         "from pathlib import Path\n"
         "class Foo:\n"
         "    pass\n"
-        "def ext(p: Path) -> str:\n"
-        "    return p.suffix\n"
+        "def ext(path: Path, root: Path) -> str:\n"
+        "    return path.suffix\n"
     )
     fields = load_fields_file(str(fields_file))
     assert "ext" in fields
@@ -59,8 +59,8 @@ def test_list_entries_with_custom_fields(tmp_path: Path):
     (tmp_path / "img.png").write_bytes(b"\x89PNG")
 
     fields = {
-        "ext": lambda p: p.suffix,
-        "stem": lambda p: p.stem,
+        "ext": lambda p, root: p.suffix,
+        "stem": lambda p, root: p.stem,
     }
     entries = list_entries(tmp_path, fields=fields)
     assert len(entries) == 2
@@ -89,8 +89,8 @@ def test_cli_fields_flag(tmp_path: Path, capsys):
     fields_file = tmp_path / "my_fields.py"
     fields_file.write_text(
         "from pathlib import Path\n"
-        "def ext(p: Path) -> str:\n"
-        "    return p.suffix\n"
+        "def ext(path: Path, root: Path) -> str:\n"
+        "    return path.suffix\n"
     )
 
     # create a directory to scan
@@ -112,8 +112,8 @@ def test_cli_fields_combined_with_output(tmp_path: Path):
     fields_file = tmp_path / "my_fields.py"
     fields_file.write_text(
         "from pathlib import Path\n"
-        "def ext(p: Path) -> str:\n"
-        "    return p.suffix\n"
+        "def ext(path: Path, root: Path) -> str:\n"
+        "    return path.suffix\n"
     )
 
     scan_dir = tmp_path / "data"

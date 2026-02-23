@@ -20,22 +20,23 @@ def test_list_entries_with_depth(tmp_path: Path):
     sub2.mkdir()
     (sub2 / "file2.txt").write_text("depth 2")
 
-    # Test with depth=0 (root level only)
+    # Test with depth=0 (root level only: file0.txt + sub1/)
     depth0 = listing.list_entries(tmp_path, depth=0)
-    assert len(depth0) == 1
+    assert len(depth0) == 2
     assert "file0.txt" in [e["name"] for e in depth0]
+    assert "sub1" in [e["name"] for e in depth0]
 
     # Test with depth=1 (root + one level down)
     depth1 = listing.list_entries(tmp_path, depth=1)
-    assert len(depth1) == 2
+    assert len(depth1) == 4  # file0.txt, sub1/, sub1/file1.txt, sub1/sub2/
     names = {e["name"] for e in depth1}
     assert "file0.txt" in names
     assert any("file1.txt" in n for n in names)
 
     # Test with depth=2 (root + two levels down)
     depth2 = listing.list_entries(tmp_path, depth=2)
-    assert len(depth2) == 3
+    assert len(depth2) == 5  # file0.txt, sub1/, sub1/file1.txt, sub1/sub2/, sub1/sub2/file2.txt
 
     # Test with no depth limit (None)
     unlimited = listing.list_entries(tmp_path, depth=None)
-    assert len(unlimited) == 3
+    assert len(unlimited) == 5

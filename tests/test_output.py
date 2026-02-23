@@ -60,8 +60,8 @@ def test_output_combined_with_depth(tmp_path: Path):
 
     assert rc == 0
     data = json.loads(out_file.read_text(encoding="utf-8"))
-    assert len(data) == 1
-    assert data[0]["name"] == "root.txt"
+    assert len(data) == 2  # root.txt + sub/
+    assert any(e["name"] == "root.txt" for e in data)
 
 
 def test_output_missing_argument(capsys):
