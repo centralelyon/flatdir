@@ -20,6 +20,7 @@ def list_entries(
     limit: int | None = None,
     depth: int | None = None,
     fields: dict[str, object] | None = None,
+    exclude: list[tuple[str, str]] | None = None,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
@@ -44,6 +45,8 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
+            if _excluded(entry, exclude):
+                continue
             entries.append(entry)
 
         # list files at this level
@@ -54,6 +57,8 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
+            if _excluded(entry, exclude):
+                continue
             entries.append(entry)
 
     # return a sorted list of entries
@@ -64,3 +69,13 @@ def list_entries(
         entries = entries[:limit]
 
     return entries
+
+
+def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None) -> bool:
+    """Return True if *entry* matches any of the exclude rules."""
+    if not exclude:
+        return False
+    for field_name, value in exclude:
+        if str(entry.get(field_name, "")) == value:
+            return True
+    return False

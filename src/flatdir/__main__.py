@@ -1,6 +1,7 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
-Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE] [path]
+Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
+                         [--exclude field=value ...] [path]
 """
 
 from __future__ import annotations
@@ -64,6 +65,25 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 1
 
+    # parse --exclude flags (repeatable: --exclude field=value --exclude field2=value2)
+    exclude: list[tuple[str, str]] = []
+    while "--exclude" in argv:
+        try:
+            idx = argv.index("--exclude")
+            raw = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+            if "=" not in raw:
+                print(
+                    "error: --exclude requires field=value format",
+                    file=sys.stderr,
+                )
+                return 1
+            field_name, _, value = raw.partition("=")
+            exclude.append((field_name, value))
+        except IndexError:
+            print("error: --exclude requires a field=value argument", file=sys.stderr)
+            return 1
+
     path = Path(argv[0]) if argv else Path(".")
 
     # error in case of missing path or path is not a directory
@@ -72,7 +92,13 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     # generate the actual list of entries to be returned as JSON
-    entries = list_entries(path, limit=limit, depth=depth, fields=fields)
+    entries = list_entries(
+        path,
+        limit=limit,
+        depth=depth,
+        fields=fields,
+        exclude=exclude or None,
+    )
 
     # write JSON to output file or stdout
     if output is not None:

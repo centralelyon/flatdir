@@ -104,3 +104,9 @@ All options can be combined:
 ```bash
 python -m flatdir . --depth 0 --limit 10 --fields my_fields.py --output result.json
 ```
+
+`--exclude` to exclude entries based on a field value:
+
+```bash
+python -m flatdir . --exclude type=directory    
+```
