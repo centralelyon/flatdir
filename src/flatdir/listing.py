@@ -21,6 +21,7 @@ def list_entries(
     depth: int | None = None,
     fields: dict[str, object] | None = None,
     exclude: list[tuple[str, str]] | None = None,
+    only: list[tuple[str, str]] | None = None,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
@@ -45,7 +46,7 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
-            if _excluded(entry, exclude):
+            if _excluded(entry, exclude) or not _included(entry, only):
                 continue
             entries.append(entry)
 
@@ -57,7 +58,7 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
-            if _excluded(entry, exclude):
+            if _excluded(entry, exclude) or not _included(entry, only):
                 continue
             entries.append(entry)
 
@@ -79,3 +80,23 @@ def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None) -
         if str(entry.get(field_name, "")) == value:
             return True
     return False
+
+
+def _included(entry: dict[str, object], only: list[tuple[str, str]] | None) -> bool:
+    """Return True if *entry* matches the inclusive rules.
+    If multiple fields are provided, it must match ALL fields (AND logic).
+    If multiple values are provided for the same field, it must match ANY of them (OR logic).
+    """
+    if not only:
+        return True
+    
+    # group by field
+    required: dict[str, set[str]] = {}
+    for f, v in only:
+        required.setdefault(f, set()).add(v)
+        
+    for f, values in required.items():
+        if str(entry.get(f, "")) not in values:
+            return False
+            
+    return True

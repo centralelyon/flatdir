@@ -1,7 +1,7 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
-                         [--exclude field=value ...] [path]
+                         [--exclude field=value ...] [--only field=value ...] [path]
 """
 
 from __future__ import annotations
@@ -84,6 +84,25 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --exclude requires a field=value argument", file=sys.stderr)
             return 1
 
+    # parse --only flags (repeatable: --only field=value)
+    only: list[tuple[str, str]] = []
+    while "--only" in argv:
+        try:
+            idx = argv.index("--only")
+            raw = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+            if "=" not in raw:
+                print(
+                    "error: --only requires field=value format",
+                    file=sys.stderr,
+                )
+                return 1
+            field_name, _, value = raw.partition("=")
+            only.append((field_name, value))
+        except IndexError:
+            print("error: --only requires a field=value argument", file=sys.stderr)
+            return 1
+
     path = Path(argv[0]) if argv else Path(".")
 
     # error in case of missing path or path is not a directory
@@ -98,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
         depth=depth,
         fields=fields,
         exclude=exclude or None,
+        only=only or None,
     )
 
     # write JSON to output file or stdout

@@ -110,3 +110,9 @@ python -m flatdir . --depth 0 --limit 10 --fields my_fields.py --output result.j
 ```bash
 python -m flatdir . --exclude type=directory    
 ```
+
+`--only` to include ONLY entries matching a field value (opposite of exclude):
+
+```bash
+python -m flatdir . --only type=file --only ext=.py
+```
