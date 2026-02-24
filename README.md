@@ -97,7 +97,7 @@ Output (both files and directories are listed):
 ```
 
 The default fields (`name`, `type`, `mtime`, `size`) are themselves plugins defined
-in `src/flatdir/plugins/defaults.py`.
+in `src/flatdir/plugins/defaults.py`. Additional examples are in `src/flatdir/plugins/`.
 
 All options can be combined:
 
@@ -116,6 +116,13 @@ python -m flatdir . --exclude type=directory
 ```bash
 python -m flatdir . --only type=file --only ext=.py
 ```
+
+`--match PATTERN` to include ONLY entries whose name matches a regular expression:
+
+```bash
+python -m flatdir . --match "^ABC-\d{2}-\d{2}"
+```
+
 `full_path` to include the absolute path of the entry:
 
 ```bash

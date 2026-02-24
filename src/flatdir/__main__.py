@@ -1,7 +1,8 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
-                         [--exclude field=value ...] [--only field=value ...] [path]
+                         [--exclude field=value ...] [--only field=value ...]
+                         [--match PATTERN] [path]
 """
 
 from __future__ import annotations
@@ -103,6 +104,17 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --only requires a field=value argument", file=sys.stderr)
             return 1
 
+    # parse --match flag if present
+    match: str | None = None
+    if "--match" in argv:
+        try:
+            idx = argv.index("--match")
+            match = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --match requires a PATTERN argument", file=sys.stderr)
+            return 1
+
     # check for unknown flags or too many arguments
     positionals = []
     for arg in argv:
@@ -130,6 +142,7 @@ def main(argv: list[str] | None = None) -> int:
         fields=fields,
         exclude=exclude or None,
         only=only or None,
+        match=match,
     )
 
     # write JSON to output file or stdout

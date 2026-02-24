@@ -6,6 +6,7 @@ Each entry is a dict with keys determined by field plugins (defaults: name, type
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from .plugins import defaults as _defaults
@@ -22,6 +23,7 @@ def list_entries(
     fields: dict[str, object] | None = None,
     exclude: list[tuple[str, str]] | None = None,
     only: list[tuple[str, str]] | None = None,
+    match: str | None = None,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
@@ -30,6 +32,11 @@ def list_entries(
     all_fields = dict(DEFAULT_FIELDS)
     if fields:
         all_fields.update(fields)
+
+    # compile regex pattern if match is provided
+    pattern = None
+    if match:
+        pattern = re.compile(match)
 
     for dirpath, dirnames, filenames in os.walk(root):
         base = Path(dirpath)
@@ -46,7 +53,7 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
-            if _excluded(entry, exclude) or not _included(entry, only):
+            if _excluded(entry, exclude) or not _included(entry, only) or not _matched(entry, pattern):
                 continue
             entries.append(entry)
 
@@ -58,7 +65,7 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
-            if _excluded(entry, exclude) or not _included(entry, only):
+            if _excluded(entry, exclude) or not _included(entry, only) or not _matched(entry, pattern):
                 continue
             entries.append(entry)
 
@@ -100,3 +107,10 @@ def _included(entry: dict[str, object], only: list[tuple[str, str]] | None) -> b
             return False
             
     return True
+
+
+def _matched(entry: dict[str, object], pattern: re.Pattern[str] | None) -> bool:
+    """Return True if *entry* name matches the given regex pattern."""
+    if pattern is None:
+        return True
+    return pattern.search(str(entry.get("name", ""))) is not None
