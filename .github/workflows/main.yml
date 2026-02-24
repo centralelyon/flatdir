@@ -19,7 +19,7 @@ jobs:
       - name: Create GitHub Release with Auto-Generated Notes
         uses: ncipollo/release-action@v1
         with:
-          tag: $
-          name: flatdir $
+          tag: ${{ github.ref_name }}
+          name: flatdir ${{ github.ref_name }}
           generateReleaseNotes: true  # Auto-generate release notes based on PRs and commits
-          token: $
+          token: ${{ secrets.GITHUB_TOKEN }}
