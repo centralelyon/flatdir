@@ -103,7 +103,19 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --only requires a field=value argument", file=sys.stderr)
             return 1
 
-    path = Path(argv[0]) if argv else Path(".")
+    # check for unknown flags or too many arguments
+    positionals = []
+    for arg in argv:
+        if arg.startswith("-"):
+            print(f"error: unrecognized argument: {arg}", file=sys.stderr)
+            return 1
+        positionals.append(arg)
+        
+    if len(positionals) > 1:
+        print("error: too many positional arguments", file=sys.stderr)
+        return 1
+
+    path = Path(positionals[0]) if positionals else Path(".")
 
     # error in case of missing path or path is not a directory
     if not path.exists() or not path.is_dir():
