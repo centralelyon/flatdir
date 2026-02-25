@@ -19,8 +19,8 @@ def test_no_defaults_flag(tmp_path: Path, capsys):
     data = json.loads(out)
     
     assert len(data) == 1
-    # Check that default fields are missing
-    assert "name" not in data[0]
+    # Check that default fields are missing, but name is preserved
+    assert data[0]["name"] == "foo.txt"
     assert "type" not in data[0]
     assert "size" not in data[0]
     assert "mtime" not in data[0]

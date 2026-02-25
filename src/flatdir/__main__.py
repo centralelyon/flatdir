@@ -1,10 +1,25 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
-Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
-                         [--exclude field=value ...] [--only field=value ...]
-                         [--add field=value ...] [--match PATTERN] [--sort FIELD]
-                         [--desc] [--nested] [--no-defaults] [--with-headers]
-                         [--add-depth N] [path]
+Usage: python -m flatdir [OPTIONS] [path]
+
+Options:
+  --limit N                  Limit the number of entries returned to N.
+  --depth N                  Limit the directory traversal depth to N.
+  --output FILE              Write the JSON output to FILE instead of stdout.
+  --fields FILE              Path to a python file defining custom formatting.
+  --exclude field=value      Exclude objects precisely matching boolean parameters.
+  --only field=value         Mandate object mapping fields validating correctly.
+  --add field=value          Inject static metadata values sequentially across arrays.
+  --add-depth N              Conditionally restrict --add parameters only to this tree depth.
+  --match PATTERN            Apply regex validation pattern filters across filename nodes.
+  --sort FIELD               Configure topological sequence ordering mapped by parameter.
+  --desc                     Invert topological JSON indexing sequentially backwards.
+  --nested                   Build hierarchal topological directory map nodes dynamically.
+  --no-defaults              Omit default fields (type, size, mtime) but preserve name.
+  --with-headers             Envelope the JSON payload mapping runtime stats arrays.
+  --help, -h                 Show this help menu and exit.
+
+path Defaults to the current directory '.'
 """
 
 from __future__ import annotations
@@ -21,9 +36,14 @@ from .plugins_loader import load_fields_file
 
 def main(argv: list[str] | None = None) -> int:
     start_time = time.time()
-    original_argv = list(argv) if argv is not None else sys.argv[1:]
     argv = argv if argv is not None else sys.argv[1:]
 
+    if "--help" in argv or "-h" in argv:
+        print(__doc__)
+        return 0
+
+    original_argv = list(argv)
+    
     # parse --limit flag if present
     limit: int | None = None
     if "--limit" in argv:
@@ -209,7 +229,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"path is not a directory: {path}", file=sys.stderr)
         return 2
 
-    if no_defaults and nested and (fields is None or "name" not in fields):
+    if no_defaults and (fields is None or "name" not in fields):
         from .plugins import defaults as _defaults
         if fields is None:
             fields = {}
