@@ -3,7 +3,7 @@
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
                          [--exclude field=value ...] [--only field=value ...]
                          [--add field=value ...] [--match PATTERN] [--sort FIELD]
-                         [--desc] [--nested] [path]
+                         [--desc] [--nested] [--no-defaults] [path]
 """
 
 from __future__ import annotations
@@ -160,6 +160,13 @@ def main(argv: list[str] | None = None) -> int:
         nested = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --no-defaults flag if present
+    no_defaults: bool = False
+    if "--no-defaults" in argv:
+        idx = argv.index("--no-defaults")
+        no_defaults = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # check for unknown flags or too many arguments
     positionals = []
     for arg in argv:
@@ -179,6 +186,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"path is not a directory: {path}", file=sys.stderr)
         return 2
 
+    if no_defaults and nested and (fields is None or "name" not in fields):
+        from .plugins import defaults as _defaults
+        if fields is None:
+            fields = {}
+        fields["name"] = _defaults.name
+
     # generate the actual list of entries to be returned as JSON
     entries = list_entries(
         path,
@@ -191,6 +204,7 @@ def main(argv: list[str] | None = None) -> int:
         match=match,
         sort_by=sort_by,
         sort_desc=sort_desc,
+        use_defaults=not no_defaults,
     )
 
     out_data: object = entries

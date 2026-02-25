@@ -158,3 +158,9 @@ python -m flatdir . --nested
 ```bash
 python -m flatdir . --add is_checked=true --add custom_field=NA
 ```
+
+`--no-defaults` to omit the default generated fields (`name`, `type`, `size`, `mtime`):
+
+```bash
+python -m flatdir . --no-defaults
+```

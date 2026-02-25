@@ -27,12 +27,13 @@ def list_entries(
     match: str | None = None,
     sort_by: str | None = None,
     sort_desc: bool = False,
+    use_defaults: bool = True,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
 
     # merge default fields with custom fields (custom can override defaults)
-    all_fields = dict(DEFAULT_FIELDS)
+    all_fields = dict(DEFAULT_FIELDS) if use_defaults else {}
     if fields:
         all_fields.update(fields)
 
@@ -58,7 +59,7 @@ def list_entries(
                     entry[field_name] = value
             if add_fields:
                 entry.update(add_fields)
-            if _excluded(entry, exclude) or not _included(entry, only) or not _matched(entry, pattern):
+            if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
                 continue
             entries.append(entry)
 
@@ -72,7 +73,7 @@ def list_entries(
                     entry[field_name] = value
             if add_fields:
                 entry.update(add_fields)
-            if _excluded(entry, exclude) or not _included(entry, only) or not _matched(entry, pattern):
+            if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
                 continue
             entries.append(entry)
 
@@ -96,17 +97,22 @@ def list_entries(
     return entries
 
 
-def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None) -> bool:
+def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None, p: Path, root: Path) -> bool:
     """Return True if *entry* matches any of the exclude rules."""
     if not exclude:
         return False
     for field_name, value in exclude:
-        if str(entry.get(field_name, "")) == value:
+        entry_val = entry.get(field_name)
+        if entry_val is None and field_name in _defaults.__dict__:
+            func = getattr(_defaults, field_name)
+            if callable(func):
+                entry_val = func(p, root)
+        if str(entry_val if entry_val is not None else "") == value:
             return True
     return False
 
 
-def _included(entry: dict[str, object], only: list[tuple[str, str]] | None) -> bool:
+def _included(entry: dict[str, object], only: list[tuple[str, str]] | None, p: Path, root: Path) -> bool:
     """Return True if *entry* matches the inclusive rules.
     If multiple fields are provided, it must match ALL fields (AND logic).
     If multiple values are provided for the same field, it must match ANY of them (OR logic).
@@ -120,14 +126,22 @@ def _included(entry: dict[str, object], only: list[tuple[str, str]] | None) -> b
         required.setdefault(f, set()).add(v)
         
     for f, values in required.items():
-        if str(entry.get(f, "")) not in values:
+        entry_val = entry.get(f)
+        if entry_val is None and f in _defaults.__dict__:
+            func = getattr(_defaults, f)
+            if callable(func):
+                entry_val = func(p, root)
+        if str(entry_val if entry_val is not None else "") not in values:
             return False
             
     return True
 
 
-def _matched(entry: dict[str, object], pattern: re.Pattern[str] | None) -> bool:
+def _matched(entry: dict[str, object], pattern: re.Pattern[str] | None, p: Path, root: Path) -> bool:
     """Return True if *entry* name matches the given regex pattern."""
     if pattern is None:
         return True
-    return pattern.search(str(entry.get("name", ""))) is not None
+    name_val = entry.get("name")
+    if name_val is None:
+        name_val = _defaults.name(p, root)
+    return pattern.search(str(name_val)) is not None
