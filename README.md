@@ -170,3 +170,12 @@ python -m flatdir . --no-defaults --add static_field=val
 ```bash
 python -m flatdir . --with-headers
 ```
+
+## Similar or related tools
+
+- [jq](https://jqlang.org/) - A command-line JSON processor that can be used to manipulate and query JSON data, including file metadata.
+- [n]
+- [Nginx Autoindex](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html#autoindex_format) or [Apache mode_autoindex](https://httpd.apache.org/docs/current/mod/mod_autoindex.html) - For serving static files with directory listing capabilities as JSON.
+- [gron](https://github.com/tomnomnom/gron) - A command-line tool that transforms JSON into a flat, line-oriented format, making it easier to grep and manipulate with other command-line tools.
+- [dasel](https://github.com/TomWright/dasel) - A command-line tool for querying and manipulating data structures like JSON, YAML, and XML, to extract file metadata.
+- [jo](https://github.com/jpmens/jo) - A command-line tool for creating JSON objects, to generate JSON metadata for files and directories.
