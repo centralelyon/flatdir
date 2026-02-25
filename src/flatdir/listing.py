@@ -24,6 +24,8 @@ def list_entries(
     exclude: list[tuple[str, str]] | None = None,
     only: list[tuple[str, str]] | None = None,
     match: str | None = None,
+    sort_by: str | None = None,
+    sort_desc: bool = False,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
@@ -70,7 +72,17 @@ def list_entries(
             entries.append(entry)
 
     # return a sorted list of entries
-    entries.sort(key=lambda e: str(e.get("name", "")))
+    sort_field = sort_by if sort_by else "name"
+
+    def _get_sort_key(entry: dict[str, object]) -> tuple[int, object]:
+        val = entry.get(sort_field)
+        if val is None:
+            return (0, "")
+        if isinstance(val, (int, float)):
+            return (1, val)
+        return (2, str(val).lower())
+
+    entries.sort(key=_get_sort_key, reverse=sort_desc)
 
     # apply limit if provided
     if limit is not None and limit >= 0:

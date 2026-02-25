@@ -123,13 +123,25 @@ python -m flatdir . --only type=file --only ext=.py
 python -m flatdir . --match "^ABC-\d{2}-\d{2}"
 ```
 
-`full_path` to include the absolute path of the entry:
+`--sort FIELD` to sort entries by a specific field:
+
+```bash
+python -m flatdir . --sort size
+```
+
+`--desc` to reverse the sort order (descending):
+
+```bash
+python -m flatdir . --sort size --desc
+```
+
+`--full_path` to include the absolute path of the entry:
 
 ```bash
 python -m flatdir . --fields full_path.py
 ```
 
-`parent` to include the relative path to the entry's parent directory:
+`--parent` to include the relative path to the entry's parent directory:
 
 ```bash
 python -m flatdir . --fields parent.py

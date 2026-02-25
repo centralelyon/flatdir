@@ -2,7 +2,7 @@
 
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
                          [--exclude field=value ...] [--only field=value ...]
-                         [--match PATTERN] [path]
+                         [--match PATTERN] [--sort FIELD] [--desc] [path]
 """
 
 from __future__ import annotations
@@ -115,6 +115,24 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --match requires a PATTERN argument", file=sys.stderr)
             return 1
 
+    # parse --sort flag if present
+    sort_by: str | None = None
+    if "--sort" in argv:
+        try:
+            idx = argv.index("--sort")
+            sort_by = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --sort requires a FIELD argument", file=sys.stderr)
+            return 1
+
+    # parse --desc flag if present
+    sort_desc: bool = False
+    if "--desc" in argv:
+        idx = argv.index("--desc")
+        sort_desc = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # check for unknown flags or too many arguments
     positionals = []
     for arg in argv:
@@ -143,6 +161,8 @@ def main(argv: list[str] | None = None) -> int:
         exclude=exclude or None,
         only=only or None,
         match=match,
+        sort_by=sort_by,
+        sort_desc=sort_desc,
     )
 
     # write JSON to output file or stdout
