@@ -20,6 +20,7 @@ def list_entries(
     root: Path,
     limit: int | None = None,
     depth: int | None = None,
+    add_depth: int | None = None,
     fields: dict[str, object] | None = None,
     exclude: list[tuple[str, str]] | None = None,
     only: list[tuple[str, str]] | None = None,
@@ -57,7 +58,8 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
-            if add_fields:
+            item_depth = current_depth + 1
+            if add_fields and (add_depth is None or item_depth == add_depth):
                 entry.update(add_fields)
             if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
                 continue
@@ -71,10 +73,12 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
-            if add_fields:
+            item_depth = current_depth + 1
+            if add_fields and (add_depth is None or item_depth == add_depth):
                 entry.update(add_fields)
             if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
                 continue
+
             entries.append(entry)
 
     # return a sorted list of entries

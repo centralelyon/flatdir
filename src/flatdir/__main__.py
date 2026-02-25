@@ -3,7 +3,8 @@
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
                          [--exclude field=value ...] [--only field=value ...]
                          [--add field=value ...] [--match PATTERN] [--sort FIELD]
-                         [--desc] [--nested] [--no-defaults] [--with-headers] [path]
+                         [--desc] [--nested] [--no-defaults] [--with-headers]
+                         [--add-depth N] [path]
 """
 
 from __future__ import annotations
@@ -43,6 +44,17 @@ def main(argv: list[str] | None = None) -> int:
             argv = argv[:idx] + argv[idx + 2 :]
         except (IndexError, ValueError):
             print("error: --depth requires a valid integer argument", file=sys.stderr)
+            return 1
+
+    # parse --add-depth flag if present
+    add_depth: int | None = None
+    if "--add-depth" in argv:
+        try:
+            idx = argv.index("--add-depth")
+            add_depth = int(argv[idx + 1])
+            argv = argv[:idx] + argv[idx + 2 :]
+        except (IndexError, ValueError):
+            print("error: --add-depth requires a valid integer argument", file=sys.stderr)
             return 1
 
     # parse --output flag if present
@@ -208,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
         path,
         limit=limit,
         depth=depth,
+        add_depth=add_depth,
         fields=fields,
         exclude=exclude or None,
         only=only or None,

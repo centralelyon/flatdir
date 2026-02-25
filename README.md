@@ -159,6 +159,12 @@ python -m flatdir . --nested
 python -m flatdir . --add is_checked=true --add custom_field=NA
 ```
 
+`--add-depth` to conditionally restrict `--add` parameters exclusively to nodes situated at a specified numerical directory depth:
+
+```bash
+python -m flatdir . --add is_checked=true --add-depth 1
+```
+
 `--no-defaults` to omit the default generated fields (`name`, `type`, `size`, `mtime`):
 
 ```bash
