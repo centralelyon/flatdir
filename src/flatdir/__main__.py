@@ -4,7 +4,8 @@ Usage: python -m flatdir [OPTIONS] [path]
 
 Options:
   --limit N                  Limit the number of entries returned to N.
-  --depth N                  Limit the directory traversal depth to N.
+  --depth N                  Limit the directory traversal depth to max N.
+  --min-depth N              Filter out objects positioned shallower than depth N.
   --output FILE              Write the JSON output to FILE instead of stdout.
   --fields FILE              Path to a python file defining custom formatting.
   --exclude field=value      Exclude objects precisely matching boolean parameters.
@@ -64,6 +65,17 @@ def main(argv: list[str] | None = None) -> int:
             argv = argv[:idx] + argv[idx + 2 :]
         except (IndexError, ValueError):
             print("error: --depth requires a valid integer argument", file=sys.stderr)
+            return 1
+
+    # parse --min-depth flag if present
+    min_depth: int | None = None
+    if "--min-depth" in argv:
+        try:
+            idx = argv.index("--min-depth")
+            min_depth = int(argv[idx + 1])
+            argv = argv[:idx] + argv[idx + 2 :]
+        except (IndexError, ValueError):
+            print("error: --min-depth requires a valid integer argument", file=sys.stderr)
             return 1
 
     # parse --add-depth flag if present
@@ -240,6 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         path,
         limit=limit,
         depth=depth,
+        min_depth=min_depth,
         add_depth=add_depth,
         fields=fields,
         exclude=exclude or None,

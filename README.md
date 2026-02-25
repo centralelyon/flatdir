@@ -165,6 +165,12 @@ python -m flatdir . --add is_checked=true --add custom_field=NA
 python -m flatdir . --add is_checked=true --add-depth 1
 ```
 
+`--min-depth` to strictly cut-off evaluation filtering explicitly shallower hierarchical entries out of processing:
+
+```bash
+python -m flatdir . --min-depth 2
+```
+
 `--no-defaults` to omit the default generated fields (`name`, `type`, `size`, `mtime`):
 
 ```bash
