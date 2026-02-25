@@ -146,3 +146,9 @@ python -m flatdir . --fields full_path.py
 ```bash
 python -m flatdir . --fields parent.py
 ```
+
+`--nested` to format the output as a nested, tree-like dictionary mirroring the directory hierarchy:
+
+```bash
+python -m flatdir . --nested
+```

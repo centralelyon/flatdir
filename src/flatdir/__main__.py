@@ -2,7 +2,7 @@
 
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
                          [--exclude field=value ...] [--only field=value ...]
-                         [--match PATTERN] [--sort FIELD] [--desc] [path]
+                         [--match PATTERN] [--sort FIELD] [--desc] [--nested] [path]
 """
 
 from __future__ import annotations
@@ -133,6 +133,13 @@ def main(argv: list[str] | None = None) -> int:
         sort_desc = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --nested flag if present
+    nested: bool = False
+    if "--nested" in argv:
+        idx = argv.index("--nested")
+        nested = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # check for unknown flags or too many arguments
     positionals = []
     for arg in argv:
@@ -165,15 +172,54 @@ def main(argv: list[str] | None = None) -> int:
         sort_desc=sort_desc,
     )
 
+    out_data: object = entries
+    if nested:
+        out_data = _build_nested(entries)
+
     # write JSON to output file or stdout
     if output is not None:
         with open(output, "w", encoding="utf-8") as f:
-            json.dump(entries, f, ensure_ascii=False, indent=4)
+            json.dump(out_data, f, ensure_ascii=False, indent=4)
             f.write("\n")
     else:
-        json.dump(entries, sys.stdout, ensure_ascii=False, indent=4)
+        json.dump(out_data, sys.stdout, ensure_ascii=False, indent=4)
         _ = sys.stdout.write("\n")
     return 0
+
+
+def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:
+    """Convert a flat list of entries into a nested dictionary based on 'name'."""
+    nested_dict: dict[str, object] = {}
+    for entry in entries:
+        name_val = entry.get("name")
+        if not isinstance(name_val, str):
+            continue
+            
+        parts = Path(name_val).parts
+        if not parts:
+            continue
+            
+        current: dict[str, object] = nested_dict
+        for part in parts[:-1]:
+            if part not in current:
+                current[part] = {}
+            elif not isinstance(current[part], dict):
+                current[part] = {}
+            current = current[part] # type: ignore
+            
+        last_part = parts[-1]
+        entry_data = {k: v for k, v in entry.items() if k != "name"}
+        
+        if last_part not in current:
+            current[last_part] = entry_data
+        else:
+            existing = current[last_part]
+            if isinstance(existing, dict):
+                existing.update(entry_data)
+            else:
+                current[last_part] = entry_data
+                
+    return nested_dict
 
 
 if __name__ == "__main__":
