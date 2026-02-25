@@ -173,6 +173,12 @@ python -m flatdir . --ignore-typical
 python -m flatdir . --add is_checked=true --add-depth 1
 ```
 
+`--id` to include a unique identifier for each entry:
+
+```bash
+python -m flatdir . --id
+```
+
 `--min-depth` to strictly cut-off evaluation filtering explicitly shallower hierarchical entries out of processing:
 
 ```bash
@@ -182,7 +188,13 @@ python -m flatdir . --min-depth 2
 `--no-defaults` to omit the default generated fields (`name`, `type`, `size`, `mtime`):
 
 ```bash
-python -m flatdir . --no-defaults --add static_field=val
+python -m flatdir . --no-defaults --add custom_field=NA
+```
+
+`--id` generates an auto-incrementing integer identifier perfectly corresponding horizontally sorting indexes tracking explicitly returned sequences dynamically post-evaluation. 
+
+```bash
+python -m flatdir . --id
 ```
 
 `--with-headers` to wrap the dictionary inside an envelope including `headers` (execution stats) and `entries` (the actual layout payload):

@@ -18,6 +18,7 @@ Options:
   --nested                   Build hierarchal topological directory map nodes dynamically.
   --ignore-typical           Omit standard dev environments natively (like .git, .venv).
   --no-defaults              Omit default fields (type, size, mtime) but preserve name.
+  --id                       Inject an auto-incrementing integer sequence post-sorting.
   --with-headers             Envelope the JSON payload mapping runtime stats arrays.
   --help, -h                 Show this help menu and exit.
 
@@ -223,6 +224,13 @@ def main(argv: list[str] | None = None) -> int:
         no_defaults = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --id flag if present
+    auto_id: bool = False
+    if "--id" in argv:
+        idx = argv.index("--id")
+        auto_id = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # parse --with-headers flag if present
     with_headers: bool = False
     if "--with-headers" in argv:
@@ -272,6 +280,10 @@ def main(argv: list[str] | None = None) -> int:
         ignore_typical=ignore_typical,
         use_defaults=not no_defaults,
     )
+
+    if auto_id:
+        for index, entry in enumerate(entries, start=1):
+            entry["id"] = index
 
     out_data: object = entries
     if nested:
