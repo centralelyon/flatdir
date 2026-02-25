@@ -162,5 +162,11 @@ python -m flatdir . --add is_checked=true --add custom_field=NA
 `--no-defaults` to omit the default generated fields (`name`, `type`, `size`, `mtime`):
 
 ```bash
-python -m flatdir . --no-defaults
+python -m flatdir . --no-defaults --add static_field=val
+```
+
+`--with-headers` to wrap the dictionary inside an envelope including `headers` (execution stats) and `entries` (the actual layout payload):
+
+```bash
+python -m flatdir . --with-headers
 ```

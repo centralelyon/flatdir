@@ -3,13 +3,15 @@
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
                          [--exclude field=value ...] [--only field=value ...]
                          [--add field=value ...] [--match PATTERN] [--sort FIELD]
-                         [--desc] [--nested] [--no-defaults] [path]
+                         [--desc] [--nested] [--no-defaults] [--with-headers] [path]
 """
 
 from __future__ import annotations
 
 import json
 import sys
+import time
+import datetime
 from pathlib import Path
 
 from .listing import list_entries
@@ -17,6 +19,8 @@ from .plugins_loader import load_fields_file
 
 
 def main(argv: list[str] | None = None) -> int:
+    start_time = time.time()
+    original_argv = list(argv) if argv is not None else sys.argv[1:]
     argv = argv if argv is not None else sys.argv[1:]
 
     # parse --limit flag if present
@@ -167,6 +171,13 @@ def main(argv: list[str] | None = None) -> int:
         no_defaults = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --with-headers flag if present
+    with_headers: bool = False
+    if "--with-headers" in argv:
+        idx = argv.index("--with-headers")
+        with_headers = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # check for unknown flags or too many arguments
     positionals = []
     for arg in argv:
@@ -210,6 +221,18 @@ def main(argv: list[str] | None = None) -> int:
     out_data: object = entries
     if nested:
         out_data = _build_nested(entries)
+
+    if with_headers:
+        headers = {
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "execution_time_seconds": round(time.time() - start_time, 4),
+            "command": "python -m flatdir " + " ".join(original_argv),
+            "entries_count": len(entries)
+        }
+        out_data = {
+            "headers": headers,
+            "entries": out_data
+        }
 
     # write JSON to output file or stdout
     if output is not None:
