@@ -152,3 +152,9 @@ python -m flatdir . --fields parent.py
 ```bash
 python -m flatdir . --nested
 ```
+
+`--add` to inject static fields and values to every entry in the output:
+
+```bash
+python -m flatdir . --add is_checked=true --add custom_field=NA
+```

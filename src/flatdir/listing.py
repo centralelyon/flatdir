@@ -23,6 +23,7 @@ def list_entries(
     fields: dict[str, object] | None = None,
     exclude: list[tuple[str, str]] | None = None,
     only: list[tuple[str, str]] | None = None,
+    add_fields: dict[str, object] | None = None,
     match: str | None = None,
     sort_by: str | None = None,
     sort_desc: bool = False,
@@ -55,6 +56,8 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
+            if add_fields:
+                entry.update(add_fields)
             if _excluded(entry, exclude) or not _included(entry, only) or not _matched(entry, pattern):
                 continue
             entries.append(entry)
@@ -67,6 +70,8 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
+            if add_fields:
+                entry.update(add_fields)
             if _excluded(entry, exclude) or not _included(entry, only) or not _matched(entry, pattern):
                 continue
             entries.append(entry)

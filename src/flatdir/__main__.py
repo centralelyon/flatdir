@@ -2,7 +2,8 @@
 
 Usage: python -m flatdir [--limit N] [--depth N] [--output FILE] [--fields FILE]
                          [--exclude field=value ...] [--only field=value ...]
-                         [--match PATTERN] [--sort FIELD] [--desc] [--nested] [path]
+                         [--add field=value ...] [--match PATTERN] [--sort FIELD]
+                         [--desc] [--nested] [path]
 """
 
 from __future__ import annotations
@@ -104,6 +105,25 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --only requires a field=value argument", file=sys.stderr)
             return 1
 
+    # parse --add flags (repeatable: --add field=value)
+    add_fields: dict[str, object] = {}
+    while "--add" in argv:
+        try:
+            idx = argv.index("--add")
+            raw = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+            if "=" not in raw:
+                print(
+                    "error: --add requires field=value format",
+                    file=sys.stderr,
+                )
+                return 1
+            field_name, _, value = raw.partition("=")
+            add_fields[field_name] = _parse_value(value)
+        except IndexError:
+            print("error: --add requires a field=value argument", file=sys.stderr)
+            return 1
+
     # parse --match flag if present
     match: str | None = None
     if "--match" in argv:
@@ -167,6 +187,7 @@ def main(argv: list[str] | None = None) -> int:
         fields=fields,
         exclude=exclude or None,
         only=only or None,
+        add_fields=add_fields or None,
         match=match,
         sort_by=sort_by,
         sort_desc=sort_desc,
@@ -220,6 +241,22 @@ def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:
                 current[last_part] = entry_data
                 
     return nested_dict
+
+
+def _parse_value(value: str) -> object:
+    """Parse string value into correct python type (bool, int, float, str)."""
+    if value.lower() == "true":
+        return True
+    if value.lower() == "false":
+        return False
+    if value.lower() == "null":
+        return None
+    try:
+        if "." in value:
+            return float(value)
+        return int(value)
+    except ValueError:
+        return value
 
 
 if __name__ == "__main__":
