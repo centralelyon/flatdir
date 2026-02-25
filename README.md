@@ -159,6 +159,14 @@ python -m flatdir . --nested
 python -m flatdir . --add is_checked=true --add custom_field=NA
 ```
 
+`--ignore-typical` dynamically filters out extremely common developer structures ensuring highly recursive nested hidden trees prevent iteration loops (dramatically increasing mapping speed). 
+
+Typically blocks: `.git`, `node_modules`, `__pycache__`, `.venv`, `venv`, `.idea`, `.vscode`, `*.egg-info`, `.DS_Store`, `Thumbs.db`, `*.pyc`.
+
+```bash
+python -m flatdir . --ignore-typical
+```
+
 `--add-depth` to conditionally restrict `--add` parameters exclusively to nodes situated at a specified numerical directory depth:
 
 ```bash

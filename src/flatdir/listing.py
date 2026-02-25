@@ -15,6 +15,9 @@ from .plugins_loader import load_fields_file
 # built-in default fields, loaded once
 DEFAULT_FIELDS = load_fields_file(_defaults.__file__)
 
+IGNORE_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", ".idea", ".vscode"}
+IGNORE_FILES = {".DS_Store", "Thumbs.db"}
+
 
 def list_entries(
     root: Path,
@@ -29,6 +32,7 @@ def list_entries(
     match: str | None = None,
     sort_by: str | None = None,
     sort_desc: bool = False,
+    ignore_typical: bool = False,
     use_defaults: bool = True,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
@@ -50,6 +54,10 @@ def list_entries(
         current_depth = len(base.relative_to(root).parts)
         if depth is not None and depth >= 0 and current_depth > depth:
             continue
+
+        if ignore_typical:
+            dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS and not d.endswith(".egg-info")]
+            filenames = [f for f in filenames if f not in IGNORE_FILES and not f.endswith(".pyc")]
 
         # list subdirectories at this level
         for dirname in dirnames:

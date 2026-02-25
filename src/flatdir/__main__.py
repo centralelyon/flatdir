@@ -16,6 +16,7 @@ Options:
   --sort FIELD               Configure topological sequence ordering mapped by parameter.
   --desc                     Invert topological JSON indexing sequentially backwards.
   --nested                   Build hierarchal topological directory map nodes dynamically.
+  --ignore-typical           Omit standard dev environments natively (like .git, .venv).
   --no-defaults              Omit default fields (type, size, mtime) but preserve name.
   --with-headers             Envelope the JSON payload mapping runtime stats arrays.
   --help, -h                 Show this help menu and exit.
@@ -208,6 +209,13 @@ def main(argv: list[str] | None = None) -> int:
         nested = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --ignore-typical flag if present
+    ignore_typical: bool = False
+    if "--ignore-typical" in argv:
+        idx = argv.index("--ignore-typical")
+        ignore_typical = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # parse --no-defaults flag if present
     no_defaults: bool = False
     if "--no-defaults" in argv:
@@ -261,6 +269,7 @@ def main(argv: list[str] | None = None) -> int:
         match=match,
         sort_by=sort_by,
         sort_desc=sort_desc,
+        ignore_typical=ignore_typical,
         use_defaults=not no_defaults,
     )
 
