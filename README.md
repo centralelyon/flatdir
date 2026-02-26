@@ -141,6 +141,18 @@ python -m flatdir . --sort size --desc
 python -m flatdir . --fields full_path.py
 ```
 
+Use the `pattern_PRE_YR1_YR2_LOW_UP.py` plugin to parse names matching a specific pattern (e.g., `ABC-19-20-aa-BB`), splitting the name into `pattern_prefix`, `pattern_year1`, `pattern_year2`, `pattern_lower`, and `pattern_upper` fields:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/pattern_PRE_YR1_YR2_LOW_UP.py
+```
+
+You can then filter based on these extracted attributes using `--only`. For example, to only include directories that match the prefix `PCP`:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/pattern_PRE_YR1_YR2_LOW_UP.py --only type=directory --only pattern_prefix=PCP
+```
+
 `--parent` to include the relative path to the entry's parent directory:
 
 ```bash

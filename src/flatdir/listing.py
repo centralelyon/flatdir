@@ -15,7 +15,7 @@ from .plugins_loader import load_fields_file
 # built-in default fields, loaded once
 DEFAULT_FIELDS = load_fields_file(_defaults.__file__)
 
-IGNORE_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", ".idea", ".vscode"}
+IGNORE_DIRS = {".git", "node_modules", "__pycache__", ".venv", "venv", ".idea", ".vscode", ".ipynb_checkpoints", }
 IGNORE_FILES = {".DS_Store", "Thumbs.db"}
 
 
