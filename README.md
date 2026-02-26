@@ -169,6 +169,12 @@ python -m flatdir . \
   --only pattern_lower=aa
 ```
 
+To extract an integer sequence ID from items prefixed with numbers (like `00_intro`, `01_setup`), use `pattern_sequence_id.py` which trims out up to 10 leading zeros and returns a natively sortable `sequence_id` integer:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/pattern_sequence_id.py --sort sequence_id
+```
+
 `--parent` to include the relative path to the entry's parent directory:
 
 ```bash
