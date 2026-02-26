@@ -153,6 +153,22 @@ You can then filter based on these extracted attributes using `--only`. For exam
 python -m flatdir . --fields src/flatdir/plugins/pattern_PRE_YR1_YR2_LOW_UP.py --only type=directory --only pattern_prefix=PCP
 ```
 
+Similarly, use `pattern_PRE_YR1_YR2.py` for strictly parsing just the prefix and years (e.g., `ABC-19-20`) into `pattern_prefix`, `pattern_year1`, and `pattern_year2`:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/pattern_PRE_YR1_YR2.py
+```
+
+To filter entries based on the pattern of their parent directory, use `pattern_parent_PRE_YR1_YR2.py`. This extracts `parent_pattern_prefix`, `parent_pattern_year1`, and `parent_pattern_year2`. You can combine this with the file pattern plugin to filter on both the parent's attributes and the file's own attributes simultaneously:
+
+```bash
+python -m flatdir . \
+  --fields src/flatdir/plugins/pattern_parent_PRE_YR1_YR2.py \
+  --fields src/flatdir/plugins/pattern_PRE_YR1_YR2_LOW_UP.py \
+  --only parent_pattern_prefix=ABC \
+  --only pattern_lower=aa
+```
+
 `--parent` to include the relative path to the entry's parent directory:
 
 ```bash
