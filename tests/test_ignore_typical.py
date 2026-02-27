@@ -35,11 +35,11 @@ def test_ignore_typical(tmp_path: Path, capsys):
     out, _ = capsys.readouterr()
     data = json.loads(out)
     
-    # We should only see 'foo' and 'foo/bar.txt'
+    # We should only see 'foo' and 'bar.txt'
     names = [d["name"] for d in data]
     
     assert "foo" in names
-    assert "foo/bar.txt" in names
+    assert "bar.txt" in names
     
     # Ignored typicals should emphatically NOT be returned
     assert ".git" not in names

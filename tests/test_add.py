@@ -46,6 +46,8 @@ def test_add_fields_with_nested(tmp_path: Path, capsys):
     assert code == 0
     out, _ = capsys.readouterr()
     data = json.loads(out)
+    print("DUMP DATA:", json.dumps(data, indent=2))
+
     
     assert data["foo"]["global"] is True
     assert data["foo"]["bar.txt"]["global"] is True

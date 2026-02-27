@@ -27,7 +27,7 @@ def test_add_depth_flat(tmp_path: Path, capsys):
     assert "custom" not in foo_entry
     
     # bar.txt is at depth 2, should have custom field
-    bar_entry = next(d for d in data if d["name"] == "foo/bar.txt")
+    bar_entry = next(d for d in data if d["name"] == "bar.txt" and d.get("path") == "foo")
     assert bar_entry["custom"] is True
 
 def test_add_depth_nested(tmp_path: Path, capsys):

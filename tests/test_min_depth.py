@@ -20,9 +20,9 @@ def test_min_depth_flat(tmp_path: Path, capsys):
     out, _ = capsys.readouterr()
     data = json.loads(out)
     
-    # We should only see 'foo/bar.txt' (depth 2), NOT 'foo' (depth 1)
+    # We should only see 'bar.txt' (depth 2), NOT 'foo' (depth 1)
     assert len(data) == 1
-    assert data[0]["name"] == "foo/bar.txt"
+    assert data[0]["name"] == "bar.txt"
 
 def test_min_depth_nested(tmp_path: Path, capsys):
     foo_dir = tmp_path / "foo"

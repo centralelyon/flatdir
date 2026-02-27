@@ -10,8 +10,8 @@ def test_build_nested_empty():
 
 def test_build_nested_simple_files():
     entries = [
-        {"name": "a.txt", "size": 10},
-        {"name": "b.txt", "size": 20},
+        {"name": "a.txt", "path": ".", "size": 10},
+        {"name": "b.txt", "path": ".", "size": 20},
     ]
     expected = {
         "a.txt": {"size": 10},
@@ -21,8 +21,8 @@ def test_build_nested_simple_files():
 
 def test_build_nested_with_directories():
     entries = [
-        {"name": "dir", "type": "directory"},
-        {"name": "dir/file.txt", "type": "file"},
+        {"name": "dir", "path": ".", "type": "directory"},
+        {"name": "file.txt", "path": "dir", "type": "file"},
     ]
     expected = {
         "dir": {
@@ -35,8 +35,8 @@ def test_build_nested_with_directories():
 def test_build_nested_directory_after_file():
     # If a file is processed before its directory parent attributes
     entries = [
-        {"name": "dir/file.txt", "type": "file"},
-        {"name": "dir", "type": "directory"},
+        {"name": "file.txt", "path": "dir", "type": "file"},
+        {"name": "dir", "path": ".", "type": "directory"},
     ]
     expected = {
         "dir": {
@@ -48,8 +48,8 @@ def test_build_nested_directory_after_file():
 
 def test_build_nested_deep_hierarchy():
     entries = [
-        {"name": "a/b/c/file.txt", "type": "file"},
-        {"name": "a/b", "type": "directory"}
+        {"name": "file.txt", "path": "a/b/c", "type": "file"},
+        {"name": "b", "path": "a", "type": "directory"}
     ]
     expected = {
         "a": {

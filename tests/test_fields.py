@@ -77,7 +77,7 @@ def test_list_entries_without_fields_unchanged(tmp_path: Path):
     """Without fields, entries should have only the built-in keys."""
     (tmp_path / "a.txt").write_text("a")
     entries = list_entries(tmp_path)
-    assert set(entries[0].keys()) == {"name", "type", "mtime", "size"}
+    assert set(entries[0].keys()) == {"name", "path", "type", "mtime", "size"}
 
 
 # -- CLI integration tests --

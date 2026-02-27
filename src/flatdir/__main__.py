@@ -288,6 +288,15 @@ def main(argv: list[str] | None = None) -> int:
             fields = {}
         fields["name"] = _defaults.name
 
+    if (tree or nested):
+        from .plugins import defaults as _defaults
+        if fields is None:
+            fields = {}
+        if "path" not in fields:
+            fields["path"] = _defaults.path
+        if "name" not in fields:
+            fields["name"] = _defaults.name
+
     # generate the actual list of entries to be returned as JSON
     entries = list_entries(
         path,
@@ -341,16 +350,18 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:
-    """Convert a flat list of entries into a nested dictionary based on 'name'."""
+    """Convert a flat list of entries into a nested dictionary based on 'name' and 'path'."""
     nested_dict: dict[str, object] = {}
     for entry in entries:
         name_val = entry.get("name")
-        if not isinstance(name_val, str):
+        path_val = entry.get("path")
+        if not isinstance(name_val, str) or not isinstance(path_val, str):
             continue
             
-        parts = Path(name_val).parts
-        if not parts:
-            continue
+        if path_val == ".":
+            parts = (name_val,)
+        else:
+            parts = Path(path_val).parts + (name_val,)
             
         current: dict[str, object] = nested_dict
         for part in parts[:-1]:
@@ -361,7 +372,7 @@ def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:
             current = current[part] # type: ignore
             
         last_part = parts[-1]
-        entry_data = {k: v for k, v in entry.items() if k != "name"}
+        entry_data = {k: v for k, v in entry.items() if k != "name" and k != "path"}
         
         if last_part not in current:
             current[last_part] = entry_data

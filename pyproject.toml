@@ -45,3 +45,4 @@ tests = ["tests"]
 addopts = "-q"
 minversion = "6.0"
 testpaths = ["tests"]
+pythonpath = ["src"]
