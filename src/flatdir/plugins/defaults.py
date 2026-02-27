@@ -12,11 +12,16 @@ from pathlib import Path
 
 
 def name(path: Path, root: Path) -> str:
-    """Relative path from the listing root."""
+    """The filename or directory name (basename)."""
+    return path.name
+
+
+def path(path: Path, root: Path) -> str:
+    """Relative path from the listing root (excluding the filename)."""
     try:
-        return str(path.relative_to(root))
+        return str(path.parent.relative_to(root))
     except ValueError:
-        return str(os.path.relpath(str(path), str(root)))
+        return str(os.path.relpath(str(path.parent), str(root)))
 
 
 def type(path: Path, root: Path) -> str:

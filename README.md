@@ -27,6 +27,7 @@ python -m flatdir .
 [
     {
         "name": ".DS_Store",
+        "path": ".",
         "type": "file",
         "mtime": "Mon, 23 Feb 2026 13:12:54 GMT",
         "size": 6148
@@ -82,11 +83,13 @@ Output (both files and directories are listed):
 [
     {
         "name": "docs",
+        "path": ".",
         "type": "directory",
         "mtime": "Mon, 23 Feb 2026 13:12:54 GMT"
     },
     {
         "name": "README.md",
+        "path": ".",
         "type": "file",
         "mtime": "Mon, 23 Feb 2026 13:12:54 GMT",
         "size": 835,
@@ -96,7 +99,7 @@ Output (both files and directories are listed):
 ]
 ```
 
-The default fields (`name`, `type`, `mtime`, `size`) are themselves plugins defined
+The default fields (`name`, `path`, `type`, `mtime`, `size`) are themselves plugins defined
 in `src/flatdir/plugins/defaults.py`. Additional examples are in `src/flatdir/plugins/`.
 
 All options can be combined:
@@ -219,7 +222,13 @@ python -m flatdir . --id
 python -m flatdir . --min-depth 2
 ```
 
-`--no-defaults` to omit the default generated fields (`name`, `type`, `size`, `mtime`):
+`--dict-field KEY[=FILE]` to extract the value of `KEY` from a JSON `FILE` located within each traversed directory, merging it directly into the directory's resulting JSON object mapping. If the `FILE` name is omitted, it defaults to using the directory's basename (`<dirname>.json`). This is highly cache-optimized when fetching multiple keys from the same matched file.
+
+```bash
+python -m flatdir . --dict-field author=meta.json --dict-field version
+```
+
+`--no-defaults` to omit the default generated fields (`name`, `path`, `type`, `size`, `mtime`):
 
 ```bash
 python -m flatdir . --no-defaults --add custom_field=NA

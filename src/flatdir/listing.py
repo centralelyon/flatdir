@@ -5,6 +5,7 @@ Each entry is a dict with keys determined by field plugins (defaults: name, type
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
@@ -29,6 +30,7 @@ def list_entries(
     exclude: list[tuple[str, str]] | None = None,
     only: list[tuple[str, str]] | None = None,
     add_fields: dict[str, object] | None = None,
+    dict_fields: list[tuple[str, str | None]] | None = None,
     match: str | None = None,
     sort_by: str | None = None,
     sort_desc: bool = False,
@@ -67,6 +69,11 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
+                    
+            # Extract dict-fields if requested
+            if dict_fields:
+                _apply_dict_fields(entry, p, dict_fields)
+                
             item_depth = current_depth + 1
             if add_fields and (add_depth is None or item_depth == add_depth):
                 entry.update(add_fields)
@@ -115,6 +122,40 @@ def list_entries(
         entries = entries[:limit]
 
     return entries
+
+
+def _apply_dict_fields(
+    entry: dict[str, object], 
+    directory_path: Path, 
+    dict_fields: list[tuple[str, str | None]]
+) -> None:
+    """Read dict_fields logic and apply standard modifications for matching directory values."""
+    dir_name = directory_path.name
+    cache: dict[str, dict[str, object]] = {}
+
+    for key, custom_filename in dict_fields:
+        target_file = custom_filename if custom_filename else f"{dir_name}.json"
+        
+        # Load parsing from caching map to avoid dual loads
+        if target_file not in cache:
+            json_path = directory_path / target_file
+            if not json_path.is_file():
+                cache[target_file] = {}
+            else:
+                try:
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        if isinstance(data, dict):
+                            cache[target_file] = data
+                        else:
+                            cache[target_file] = {}
+                except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+                    cache[target_file] = {}
+        
+        # Extract matching logic parameter definitions
+        file_data = cache[target_file]
+        if key in file_data:
+            entry[key] = file_data[key]
 
 
 def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None, p: Path, root: Path) -> bool:

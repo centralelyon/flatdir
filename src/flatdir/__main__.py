@@ -12,6 +12,7 @@ Options:
   --only field=value         Mandate object mapping fields validating correctly.
   --add field=value          Inject static metadata values sequentially across arrays.
   --add-depth N              Conditionally restrict --add parameters only to this tree depth.
+  --dict-field KEY[=FILE]    Extract KEY from FILE in each dir (FILE defaults to <dir>.json).
   --match PATTERN            Apply regex validation pattern filters across filename nodes.
   --sort FIELD               Configure topological sequence ordering mapped by parameter.
   --desc                     Invert topological JSON indexing sequentially backwards.
@@ -174,6 +175,22 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --add requires a field=value argument", file=sys.stderr)
             return 1
 
+    # parse --dict-field flags (repeatable: --dict-field KEY[=FILE])
+    dict_fields: list[tuple[str, str | None]] = []
+    while "--dict-field" in argv:
+        try:
+            idx = argv.index("--dict-field")
+            raw = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+            if "=" in raw:
+                key, _, filename = raw.partition("=")
+                dict_fields.append((key, filename))
+            else:
+                dict_fields.append((raw, None))
+        except IndexError:
+            print("error: --dict-field requires a KEY[=FILE] argument", file=sys.stderr)
+            return 1
+
     # parse --match flag if present
     match: str | None = None
     if "--match" in argv:
@@ -274,6 +291,7 @@ def main(argv: list[str] | None = None) -> int:
         exclude=exclude or None,
         only=only or None,
         add_fields=add_fields or None,
+        dict_fields=dict_fields or None,
         match=match,
         sort_by=sort_by,
         sort_desc=sort_desc,
