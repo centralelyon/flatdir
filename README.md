@@ -223,6 +223,12 @@ python -m flatdir . --fields src/flatdir/plugins/pattern_sequence_id.py --sort s
 python -m flatdir . --fields parent.py
 ```
 
+To natively extract the MIME type of a file efficiently based on its file extension (e.g. `image/png`, `application/json`), map the `mime.py` plugin. This is extremely fast because it relies on string resolution without reading file bin data. Unknown signatures default to `application/octet-stream` and directories omit the field natively.
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/mime.py
+```
+
 `--nested` to format the output as an embedded nested object structure mapping raw directory keys dynamically mirroring the underlying topological hierarchy:
 
 ```bash
