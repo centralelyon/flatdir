@@ -2,6 +2,36 @@
 
 A Python library to create a flat JSON index of files and directories.
 
+A simple example with the following directory structure:
+
+```
+├── dir_1
+│   ├── file_1.txt
+└── file_2.txt
+```
+
+It generates the following flat array of dicts as a JSON file:
+
+```
+[
+    {
+        "name": "dir_1",
+        "type": "directory",
+        "path": "/"
+    },
+    {
+        "name": "file_1.txt",
+        "type": "file",
+        "path": "/dir_1/"
+    }, 
+    {
+        "name": "file_2.txt",
+        "type": "file",
+        "path": "/"
+    }
+]
+````
+
 ## Installation
 
 ```bash
@@ -14,16 +44,17 @@ Or from PyPI:
 pip install flatdir
 ```
 
+More examples are available at the bottom of this README.md file.
+
 ## Usage
 
 ```bash
 python -m flatdir .
 ```
 
-Returns a JSON file with metadata for each entry in the current directory and its subdirectories.
+Returns a JSON file, by default with some metadata for each entry in the current directory and its subdirectories.
 
 ```json
-python -m flatdir .
 [
     {
         "name": ".DS_Store",
@@ -31,10 +62,18 @@ python -m flatdir .
         "type": "file",
         "mtime": "Mon, 23 Feb 2026 13:12:54 GMT",
         "size": 6148
-    },
+    }, {
+        
+    }
 ...
 ]
 ```
+
+Options are provided to customize the output, for instance to remove the default fields, display only files, discard system files, etc.
+
+## Options
+
+Use `--help` to display all available options.
 
 `--limit N` to limit the number of entries processed:
 
@@ -252,14 +291,13 @@ python -m flatdir . --id
 python -m flatdir . --with-headers
 ```
 
-## Examples of use
+## Examples of use case
 
 - Generate a D3.js compatible JSON [hierarchical tree](https://d3js.org/d3-hierarchy/hierarchy) from the current directory and save it to a file to generate a [treemap chart](https://observablehq.com/@liris/flatdir-treemap): `python -m flatdir . --tree > flatdir.json`
 
 ## Similar or related tools
 
 - [jq](https://jqlang.org/) - A command-line JSON processor that can be used to manipulate and query JSON data, including file metadata.
-- [n]
 - [Nginx Autoindex](https://nginx.org/en/docs/http/ngx_http_autoindex_module.html#autoindex_format) or [Apache mode_autoindex](https://httpd.apache.org/docs/current/mod/mod_autoindex.html) - For serving static files with directory listing capabilities as JSON.
 - [gron](https://github.com/tomnomnom/gron) - A command-line tool that transforms JSON into a flat, line-oriented format, making it easier to grep and manipulate with other command-line tools.
 - [dasel](https://github.com/TomWright/dasel) - A command-line tool for querying and manipulating data structures like JSON, YAML, and XML, to extract file metadata.
