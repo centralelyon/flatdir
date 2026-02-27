@@ -184,10 +184,16 @@ python -m flatdir . --fields src/flatdir/plugins/pattern_sequence_id.py --sort s
 python -m flatdir . --fields parent.py
 ```
 
-`--nested` to format the output as a nested, tree-like dictionary mirroring the directory hierarchy:
+`--nested` to format the output as an embedded nested object structure mapping raw directory keys dynamically mirroring the underlying topological hierarchy:
 
 ```bash
 python -m flatdir . --nested
+```
+
+`--tree` transforms the evaluated JSON sequence strictly into a universally standardized tree array compatible seamlessly with D3.js representations (specifically conforming to the `flare-2.json` hierarchy graph), dynamically rendering parents explicitly possessing a `children` list encompassing nested objects:
+
+```bash
+python -m flatdir . --tree
 ```
 
 `--add` to inject static fields and values to every entry in the output:
@@ -245,6 +251,10 @@ python -m flatdir . --id
 ```bash
 python -m flatdir . --with-headers
 ```
+
+## Examples of use
+
+- Generate a D3.js compatible JSON [hierarchical tree](https://d3js.org/d3-hierarchy/hierarchy) from the current directory and save it to a file to generate a [treemap chart](https://observablehq.com/@liris/flatdir-treemap): `python -m flatdir . --tree > flatdir.json`
 
 ## Similar or related tools
 

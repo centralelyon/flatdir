@@ -16,6 +16,7 @@ Options:
   --match PATTERN            Apply regex validation pattern filters across filename nodes.
   --sort FIELD               Configure topological sequence ordering mapped by parameter.
   --desc                     Invert topological JSON indexing sequentially backwards.
+  --tree                     Format the output as a D3.js compatible tree with children arrays.
   --nested                   Build hierarchal topological directory map nodes dynamically.
   --ignore-typical           Omit standard dev environments natively (like .git, .venv).
   --no-defaults              Omit default fields (type, size, mtime) but preserve name.
@@ -220,6 +221,13 @@ def main(argv: list[str] | None = None) -> int:
         sort_desc = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --tree flag if present
+    tree: bool = False
+    if "--tree" in argv:
+        idx = argv.index("--tree")
+        tree = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # parse --nested flag if present
     nested: bool = False
     if "--nested" in argv:
@@ -304,7 +312,9 @@ def main(argv: list[str] | None = None) -> int:
             entry["id"] = index
 
     out_data: object = entries
-    if nested:
+    if tree:
+        out_data = _build_tree(entries, path.name)
+    elif nested:
         out_data = _build_nested(entries)
 
     if with_headers:
@@ -363,6 +373,89 @@ def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:
                 current[last_part] = entry_data
                 
     return nested_dict
+
+
+def _build_tree(entries: list[dict[str, object]], root_name: str) -> dict[str, object]:
+    """Convert a flat list of entries into a D3.js compliant tree dictionary with 'children'."""
+    # Build out recursive hierarchy nodes tracking children arrays
+    tree_root: dict[str, object] = {"name": root_name}
+    
+    for entry in entries:
+        path_val = entry.get("path")
+        name_val = entry.get("name")
+        if not isinstance(path_val, str) or not isinstance(name_val, str):
+            continue
+            
+        parts = Path(path_val).parts
+        if not parts or parts[0] == ".":
+            # If path represents root directory object itself
+            if not parts or (len(parts) == 1 and parts[0] == "."):
+                parts = ()
+                
+        # Traverse and construct missing hierarchy based on the relative path
+        current_node = tree_root
+        for part in parts:
+            if part == ".":
+                continue
+                
+            # Look for existing child
+            if "children" not in current_node:
+                current_node["children"] = []
+            assert isinstance(current_node["children"], list)
+            
+            found = False
+            for child in current_node["children"]:
+                if child.get("name") == part:
+                    current_node = child
+                    found = True
+                    break
+            
+            # Create intermediary branch if needed
+            if not found:
+                new_node: dict[str, object] = {"name": part}
+                current_node["children"].append(new_node)
+                current_node = new_node
+                
+        # If the entry IS the root directory itself, apply properties to root
+        if not parts and name_val == root_name:
+            for k, v in entry.items():
+                if k not in ["name", "path"]:
+                    tree_root[k] = v
+            continue
+
+        # Find if the target node (name_val) is already structurally appended
+        if "children" not in current_node:
+            current_node["children"] = []
+        assert isinstance(current_node["children"], list)
+        
+        target_node = None
+        for child in current_node["children"]:
+            if child.get("name") == name_val:
+                target_node = child
+                break
+                
+        if target_node is None:
+            target_node = {"name": name_val}
+            current_node["children"].append(target_node)
+            
+        # Bind payload data (except 'path')
+        for k, v in entry.items():
+            if k == "path" or k == "name":
+                continue
+            target_node[k] = v
+                
+    # Remove empty children blocks if any leaves happen to spawn them without validation
+    def _prune_empty_children(node: dict[str, object]):
+        if "children" in node:
+            assert isinstance(node["children"], list)
+            if not node["children"]:
+                del node["children"]
+            else:
+                for child in node["children"]:
+                    _prune_empty_children(child)
+                    
+    _prune_empty_children(tree_root)
+    return tree_root
 
 
 def _parse_value(value: str) -> object:
