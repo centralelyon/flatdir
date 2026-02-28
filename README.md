@@ -241,6 +241,12 @@ To extract plain-text specific properties (such as calculating the `text_lines`,
 python -m flatdir . --fields src/flatdir/plugins/text.py
 ```
 
+To extract extended file system properties such as UUIDs, strict ISO 8601 timestamps, CHMOD UNIX permissions, file ownership, and securely size-limited SHA-256 cryptographic signatures, map the `extended.py` plugin:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/extended.py
+```
+
 `--nested` to format the output as an embedded nested object structure mapping raw directory keys dynamically mirroring the underlying topological hierarchy:
 
 ```bash
