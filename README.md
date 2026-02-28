@@ -229,6 +229,12 @@ To natively extract the MIME type of a file efficiently based on its file extens
 python -m flatdir . --fields src/flatdir/plugins/mime.py
 ```
 
+To extract plain-text specific properties (such as calculating the `text_lines`, `text_words`, `text_characters`, and `text_is_blank` booleans) from text-based file formats (`.txt`, `.md`, `.json`, `.csv`, etc.), use `text.py`. It operates efficiently via an in-memory cache evaluating binaries exactly once per file:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/text.py
+```
+
 `--nested` to format the output as an embedded nested object structure mapping raw directory keys dynamically mirroring the underlying topological hierarchy:
 
 ```bash
@@ -300,6 +306,8 @@ python -m flatdir . --with-headers
 ## Examples of use case
 
 - Generate a D3.js compatible JSON [hierarchical tree](https://d3js.org/d3-hierarchy/hierarchy) from the current directory and save it to a file to generate a [treemap chart](https://observablehq.com/@liris/flatdir-treemap): `python -m flatdir . --tree > flatdir.json`
+
+- Continuous observation within your directory by using Meta's [`watchman`](https://facebook.github.io/watchman/) tool with first `watchman watch` and then trigger the rebuild script matching any pattern changes `watchman-make -p '**/*' --run 'python -m flatdir . --output index.json'`
 
 ## Similar or related tools
 
