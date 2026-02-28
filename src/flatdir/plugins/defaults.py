@@ -29,15 +29,21 @@ def type(path: Path, root: Path) -> str:
     return "directory" if path.is_dir() else "file"
 
 
-def mtime(path: Path, root: Path) -> str:
+def mtime(path: Path, root: Path) -> str | None:
     """Last modification time in HTTP-date format."""
-    st = path.stat()
-    t = time.gmtime(st.st_mtime)
-    return time.strftime("%a, %d %b %Y %H:%M:%S GMT", t)
+    try:
+        st = path.stat()
+        t = time.gmtime(st.st_mtime)
+        return time.strftime("%a, %d %b %Y %H:%M:%S GMT", t)
+    except OSError:
+        return None
 
 
 def size(path: Path, root: Path) -> int | None:
     """File size in bytes. Returns None for directories (omitted from output)."""
     if path.is_dir():
         return None
-    return int(path.stat().st_size)
+    try:
+        return int(path.stat().st_size)
+    except OSError:
+        return None
