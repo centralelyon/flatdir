@@ -133,6 +133,18 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 return 1
             field_name, _, value = raw.partition("=")
+            if value.startswith("[") and value.endswith("]"):
+                try:
+                    # Parse valid JSON arrays mapping to multiple conditions
+                    for v in json.loads(value):
+                        exclude.append((field_name, str(v)))
+                    continue
+                except json.JSONDecodeError:
+                    # Fallback to simple comma splitting if manually written [a,b]
+                    for v in value[1:-1].split(","):
+                        if v.strip():
+                            exclude.append((field_name, v.strip().strip("'\"")))
+                    continue
             exclude.append((field_name, value))
         except IndexError:
             print("error: --exclude requires a field=value argument", file=sys.stderr)
@@ -152,6 +164,16 @@ def main(argv: list[str] | None = None) -> int:
                 )
                 return 1
             field_name, _, value = raw.partition("=")
+            if value.startswith("[") and value.endswith("]"):
+                try:
+                    for v in json.loads(value):
+                        only.append((field_name, str(v)))
+                    continue
+                except json.JSONDecodeError:
+                    for v in value[1:-1].split(","):
+                        if v.strip():
+                            only.append((field_name, v.strip().strip("'\"")))
+                    continue
             only.append((field_name, value))
         except IndexError:
             print("error: --only requires a field=value argument", file=sys.stderr)

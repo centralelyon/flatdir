@@ -95,3 +95,110 @@ def test_cli_exclude_and_only(tmp_path: Path, capsys):
 
     data = json.loads(capsys.readouterr().out)
     assert data == []
+
+
+def test_only_with_inline_array(tmp_path: Path, capsys):
+    (tmp_path / "app.py").write_text("")
+    (tmp_path / "script.js").write_text("")
+    (tmp_path / "data.json").write_text("")
+    (tmp_path / "style.css").write_text("")
+    
+    code = main([
+        str(tmp_path),
+        "--only", 'name=["app.py", "style.css"]'
+    ])
+    
+    assert code == 0
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    assert len(data) == 2
+    names = {d["name"] for d in data}
+    assert "app.py" in names
+    assert "style.css" in names
+    assert "script.js" not in names
+
+
+def test_exclude_with_inline_unquoted_array(tmp_path: Path, capsys):
+    (tmp_path / "app.py").write_text("")
+    (tmp_path / "script.js").write_text("")
+    (tmp_path / "data.json").write_text("")
+    (tmp_path / "style.css").write_text("")
+    
+    code = main([
+        str(tmp_path),
+        "--exclude", 'name=[app.py, script.js]'
+    ])
+    
+    assert code == 0
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    assert len(data) == 2
+    names = {d["name"] for d in data}
+    assert "data.json" in names
+    assert "style.css" in names
+    assert "app.py" not in names
+
+
+def test_only_with_whitespace_array_unquoted(tmp_path: Path, capsys):
+    """Test arrays formatted with extra whitespace inside brackets."""
+    (tmp_path / "a.js").write_text("")
+    (tmp_path / "b.ts").write_text("")
+    (tmp_path / "c.go").write_text("")
+    
+    code = main([
+        str(tmp_path),
+        "--only", 'name=[ a.js , c.go ]'
+    ])
+    assert code == 0
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    names = {d["name"] for d in data}
+    assert "a.js" in names
+    assert "c.go" in names
+    assert "b.ts" not in names
+
+
+def test_exclude_single_element_array(tmp_path: Path, capsys):
+    """Test arrays containing only one element fallback structure."""
+    (tmp_path / "target.txt").write_text("")
+    (tmp_path / "other.txt").write_text("")
+    
+    code = main([
+        str(tmp_path),
+        "--exclude", 'name=[target.txt]'
+    ])
+    assert code == 0
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    names = {d["name"] for d in data}
+    assert "other.txt" in names
+    assert "target.txt" not in names
+
+
+def test_exclude_combined_array_and_single(tmp_path: Path, capsys):
+    """Tests array parsing stacking with standard sequential argument passing."""
+    (tmp_path / "1.txt").write_text("")
+    (tmp_path / "2.txt").write_text("")
+    (tmp_path / "3.txt").write_text("")
+    (tmp_path / "4.txt").write_text("")
+    
+    code = main([
+        str(tmp_path),
+        "--exclude", 'name=[1.txt, 2.txt]',
+        "--exclude", "name=3.txt"
+    ])
+    assert code == 0
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    names = {d["name"] for d in data}
+    assert "4.txt" in names
+    assert "1.txt" not in names
+    assert "2.txt" not in names
+    assert "3.txt" not in names
+
+

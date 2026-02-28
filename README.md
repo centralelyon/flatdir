@@ -159,6 +159,12 @@ python -m flatdir . --exclude type=directory
 python -m flatdir . --only type=file --only ext=.py
 ```
 
+You can also pass arrays inline formatted as `[value1,value2]` or strictly valid JSON `["value1", "value2"]`. This behaves identically to passing multiple arguments for the same field (OR logic):
+
+```bash
+python -m flatdir . --only name=["folder_A", "folder_B", "folder_C"]
+```
+
 `--match PATTERN` to include ONLY entries whose name matches a regular expression:
 
 ```bash
