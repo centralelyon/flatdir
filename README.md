@@ -207,6 +207,12 @@ Similarly, use `pattern_PRE_YR1_YR2.py` for strictly parsing just the prefix and
 python -m flatdir . --fields src/flatdir/plugins/pattern_PRE_YR1_YR2.py
 ```
 
+To parse directory patterns combining a prefix, two years, a numeric ID and a trailing name string (e.g., `PRE-25-26-123-Text`), use the `pattern_PRE_YR1_YR2_ID_NAME.py` plugin. This maps out `pattern_prefix`, `pattern_year1`, `pattern_year2`, `pattern_id`, and `pattern_name`:
+
+```bash
+python -m flatdir . --fields src/flatdir/plugins/pattern_PRE_YR1_YR2_ID_NAME.py
+```
+
 To filter entries based on the pattern of their parent directory, use `pattern_parent_PRE_YR1_YR2.py`. This extracts `parent_pattern_prefix`, `parent_pattern_year1`, and `parent_pattern_year2`. You can combine this with the file pattern plugin to filter on both the parent's attributes and the file's own attributes simultaneously:
 
 ```bash

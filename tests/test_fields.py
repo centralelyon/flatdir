@@ -240,3 +240,28 @@ def test_cli_join_explicit_local_key(tmp_path: Path, capsys):
     entry = next((e for e in data if e["name"] == "item_123"), None)
     assert entry is not None
     assert entry.get("value") == "test"
+
+
+def test_cli_pattern_pre_yr1_yr2_id_name(tmp_path: Path, capsys):
+    """Test the pattern_PRE_YR1_YR2_ID_NAME.py plugin."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    
+    # Create an entry matching the pattern
+    (scan_dir / "PE-25-26-70-Competition").mkdir()
+    
+    plugin_path = Path(__file__).parent.parent / "src" / "flatdir" / "plugins" / "pattern_PRE_YR1_YR2_ID_NAME.py"
+    
+    rc = main(["--fields", str(plugin_path), str(scan_dir)])
+    assert rc == 0
+    
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    entry = next((e for e in data if e["name"] == "PE-25-26-70-Competition"), None)
+    assert entry is not None
+    assert entry.get("pattern_prefix") == "PE"
+    assert entry.get("pattern_year1") == "25"
+    assert entry.get("pattern_year2") == "26"
+    assert entry.get("pattern_id") == "70"
+    assert entry.get("pattern_name") == "Competition"
