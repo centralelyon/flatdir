@@ -297,6 +297,13 @@ python -m flatdir . --min-depth 2
 python -m flatdir . --dict-field author=meta.json --dict-field version
 ```
 
+`--include-json [FILE]` to deeply embed the completely parsed body of a JSON `FILE` located within each traversed directory. The entire file will be mounted in the JSON output specifically inside a top-level key named `"include"`.
+If no file is explicitly described, it attempts to load `<dirname>.json` by default. You can also override the target key using the syntax `--include-json KEY=FILE`.
+
+```bash
+python -m flatdir . --include-json
+```
+
 `--no-defaults` to omit the default generated fields (`name`, `path`, `type`, `size`, `mtime`):
 
 ```bash

@@ -13,6 +13,7 @@ Options:
   --add field=value          Inject static metadata values sequentially across arrays.
   --add-depth N              Conditionally restrict --add parameters only to this tree depth.
   --dict-field KEY[=FILE]    Extract KEY from FILE in each dir (FILE defaults to <dir>.json).
+  --include-json KEY[=FILE]  Embed the entire FILE payload recursively under KEY in each dir.
   --match PATTERN            Apply regex validation pattern filters across filename nodes.
   --sort FIELD               Configure topological sequence ordering mapped by parameter.
   --desc                     Invert topological JSON indexing sequentially backwards.
@@ -214,6 +215,36 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --dict-field requires a KEY[=FILE] argument", file=sys.stderr)
             return 1
 
+    # parse --include-json flags (repeatable: --include-json [KEY=FILE])
+    include_jsons: list[tuple[str, str | None]] = []
+    while "--include-json" in argv:
+        idx = argv.index("--include-json")
+        
+        # Check if there is a next argument that isn't a flag and isn't the final positional path
+        # If there is another arg, and it's not a flag (like --depth), and there's STILL another arg after it (the path) 
+        # or it has an '=' sign in it...
+        has_value = False
+        raw = ""
+        
+        if idx + 1 < len(argv):
+            next_arg = argv[idx + 1]
+            if not next_arg.startswith("-"):
+                # It might be the path. If it's the path, it would be the last argument
+                if idx + 1 < len(argv) - 1 or "=" in next_arg:
+                    has_value = True
+                    raw = next_arg
+                    
+        if has_value:
+            argv = argv[:idx] + argv[idx + 2 :]
+            if "=" in raw:
+                key, _, filename = raw.partition("=")
+                include_jsons.append((key, filename))
+            else:
+                include_jsons.append((raw, None))
+        else:
+            argv = argv[:idx] + argv[idx + 1 :]
+            include_jsons.append(("include", None))
+
     # parse --match flag if present
     match: str | None = None
     if "--match" in argv:
@@ -331,6 +362,7 @@ def main(argv: list[str] | None = None) -> int:
         only=only or None,
         add_fields=add_fields or None,
         dict_fields=dict_fields or None,
+        include_jsons=include_jsons or None,
         match=match,
         sort_by=sort_by,
         sort_desc=sort_desc,

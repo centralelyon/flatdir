@@ -145,3 +145,53 @@ def test_cli_fields_nonexistent_file(capsys):
     assert rc == 1
     captured = capsys.readouterr()
     assert "not found" in captured.err.lower()
+
+
+def test_cli_include_json_default(tmp_path: Path, capsys):
+    """--include-json KEY should embed KEY using <dirname>.json by default."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    
+    sub_dir = scan_dir / "MSO"
+    sub_dir.mkdir()
+    
+    # Create the JSON file with the same name as the directory
+    json_path = sub_dir / "MSO.json"
+    json_path.write_text('{"cours": "Dataviz", "credits": 5}', encoding="utf-8")
+    
+    rc = main(["--include-json", str(scan_dir)])
+    assert rc == 0
+    
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    # Find MSO directory entry
+    mso_entry = next((e for e in data if e["name"] == "MSO"), None)
+    assert mso_entry is not None
+    assert "include" in mso_entry
+    assert isinstance(mso_entry["include"], dict)
+    assert mso_entry["include"]["cours"] == "Dataviz"
+    assert mso_entry["include"]["credits"] == 5
+
+
+def test_cli_include_json_custom_file(tmp_path: Path, capsys):
+    """--include-json KEY=FILE should embed KEY using FILE explicitly."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    
+    sub_dir = scan_dir / "MOS"
+    sub_dir.mkdir()
+    
+    json_path = sub_dir / "meta.json"
+    json_path.write_text('{"active": true}', encoding="utf-8")
+    
+    rc = main(["--include-json", "payload=meta.json", str(scan_dir)])
+    assert rc == 0
+    
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    mos_entry = next((e for e in data if e["name"] == "MOS"), None)
+    assert mos_entry is not None
+    assert "payload" in mos_entry
+    assert mos_entry["payload"]["active"] is True

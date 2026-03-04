@@ -32,6 +32,7 @@ def list_entries(
     only: list[tuple[str, str]] | None = None,
     add_fields: dict[str, object] | None = None,
     dict_fields: list[tuple[str, str | None]] | None = None,
+    include_jsons: list[tuple[str, str | None]] | None = None,
     match: str | None = None,
     sort_by: str | None = None,
     sort_desc: bool = False,
@@ -74,6 +75,10 @@ def list_entries(
             # Extract dict-fields if requested
             if dict_fields:
                 _apply_dict_fields(entry, p, dict_fields)
+            
+            # Embed full json payloads if requested
+            if include_jsons:
+                _apply_include_jsons(entry, p, include_jsons)
                 
             item_depth = current_depth + 1
             if add_fields and (add_depth is None or item_depth == add_depth):
@@ -154,6 +159,24 @@ def _apply_dict_fields(
         file_data = _read_dict_fields_json(json_path)
         if key in file_data:
             entry[key] = file_data[key]
+
+
+def _apply_include_jsons(
+    entry: dict[str, object], 
+    directory_path: Path, 
+    include_jsons: list[tuple[str, str | None]]
+) -> None:
+    """Read full files and embed their entire parsed JSON dictionary under target key."""
+    dir_name = directory_path.name
+
+    for key, custom_filename in include_jsons:
+        target_file = custom_filename if custom_filename else f"{dir_name}.json"
+        json_path = directory_path / target_file
+        
+        file_data = _read_dict_fields_json(json_path)
+        # If the file exists and has content (not empty {} from fallback), we inject the whole dict
+        if file_data: 
+            entry[key] = file_data
 
 
 def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None, p: Path, root: Path) -> bool:
