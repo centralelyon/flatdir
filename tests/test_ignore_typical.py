@@ -35,7 +35,6 @@ def test_ignore_typical(tmp_path: Path, capsys):
     out, _ = capsys.readouterr()
     data = json.loads(out)
     
-    # We should only see 'foo' and 'bar.txt'
     names = [d["name"] for d in data]
     
     assert "foo" in names
@@ -43,9 +42,9 @@ def test_ignore_typical(tmp_path: Path, capsys):
     
     # Ignored typicals should emphatically NOT be returned
     assert ".git" not in names
-    assert ".git/config" not in names
+    assert "config" not in names
     assert "node_modules" not in names
-    assert "node_modules/package" not in names
+    assert "package" not in names
     assert ".DS_Store" not in names
     assert "Thumbs.db" not in names
     assert "dummy.pyc" not in names

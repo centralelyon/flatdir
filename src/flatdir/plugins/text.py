@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import collections
+import functools
 from pathlib import Path
 
 # Common plain-text extensions to process. Everything else will be ignored.
@@ -11,23 +12,14 @@ TEXT_EXTENSIONS = {
     ".py", ".sh", ".yaml", ".yml", ".ini", ".cfg", ".log"
 }
 
-# In-memory cache to prevent reading the same file multiple times
-# when calculating different fields sequentially.
-_cache: dict[Path, str] = {}
-
-
+@functools.lru_cache(maxsize=128)
 def _get_text(path: Path) -> str | None:
     """Helper to safely read and cache text content."""
     if path.is_dir() or path.suffix.lower() not in TEXT_EXTENSIONS:
         return None
         
-    if path in _cache:
-        return _cache[path]
-        
     try:
-        content = path.read_text(encoding="utf-8")
-        _cache[path] = content
-        return content
+        return path.read_text(encoding="utf-8")
     except (UnicodeDecodeError, OSError):
         return None
 

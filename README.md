@@ -315,6 +315,29 @@ python -m flatdir . --id
 python -m flatdir . --with-headers
 ```
 
+The resulting JSON is:
+
+```json
+{
+    "headers": {
+        "root": ".",
+        "count": 123456,
+        "duration": 123.456,
+        "timestamp": "2026-03-04T11:14:40.123456"
+    },
+    "entries": [
+        {
+            "name": "file1.txt",
+            "path": "file1.txt",
+            "type": "file",
+            "size": 123,
+            "mtime": "2026-03-04T11:14:40.123456"
+        }
+        ...
+    ]
+}
+```
+
 ## Examples of use case
 
 - Generate a D3.js compatible JSON [hierarchical tree](https://d3js.org/d3-hierarchy/hierarchy) from the current directory and save it to a file to generate a [treemap chart](https://observablehq.com/@liris/flatdir-treemap): `python -m flatdir . --tree > flatdir.json`

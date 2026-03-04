@@ -5,6 +5,7 @@ Each entry is a dict with keys determined by field plugins (defaults: name, type
 
 from __future__ import annotations
 
+import functools
 import json
 import os
 import re
@@ -124,6 +125,20 @@ def list_entries(
     return entries
 
 
+@functools.lru_cache(maxsize=1024)
+def _read_dict_fields_json(json_path: Path) -> dict[str, object]:
+    if not json_path.is_file():
+        return {}
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, dict):
+                return data
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+        pass
+    return {}
+
+
 def _apply_dict_fields(
     entry: dict[str, object], 
     directory_path: Path, 
@@ -131,29 +146,12 @@ def _apply_dict_fields(
 ) -> None:
     """Read dict_fields logic and apply standard modifications for matching directory values."""
     dir_name = directory_path.name
-    cache: dict[str, dict[str, object]] = {}
 
     for key, custom_filename in dict_fields:
         target_file = custom_filename if custom_filename else f"{dir_name}.json"
+        json_path = directory_path / target_file
         
-        # Load parsing from caching map to avoid dual loads
-        if target_file not in cache:
-            json_path = directory_path / target_file
-            if not json_path.is_file():
-                cache[target_file] = {}
-            else:
-                try:
-                    with open(json_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        if isinstance(data, dict):
-                            cache[target_file] = data
-                        else:
-                            cache[target_file] = {}
-                except (json.JSONDecodeError, OSError, UnicodeDecodeError):
-                    cache[target_file] = {}
-        
-        # Extract matching logic parameter definitions
-        file_data = cache[target_file]
+        file_data = _read_dict_fields_json(json_path)
         if key in file_data:
             entry[key] = file_data[key]
 
