@@ -195,3 +195,48 @@ def test_cli_include_json_custom_file(tmp_path: Path, capsys):
     assert mos_entry is not None
     assert "payload" in mos_entry
     assert mos_entry["payload"]["active"] is True
+
+
+def test_cli_join_default_local_key(tmp_path: Path, capsys):
+    """--join FILE:REMOTE_KEY should join entries matching name=REMOTE_KEY."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    
+    sub_dir = scan_dir / "MSO"
+    sub_dir.mkdir()
+    
+    db_file = tmp_path / "db.json"
+    db_file.write_text('[{"cours": "MSO", "credits": 5}]', encoding="utf-8")
+    
+    rc = main(["--join", f"{db_file}:cours", str(scan_dir)])
+    assert rc == 0
+    
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    mso_entry = next((e for e in data if e["name"] == "MSO"), None)
+    assert mso_entry is not None
+    assert mso_entry.get("credits") == 5
+
+
+def test_cli_join_explicit_local_key(tmp_path: Path, capsys):
+    """--join FILE:REMOTE_KEY:LOCAL_KEY should join using the specified local key."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    
+    sub_dir = scan_dir / "item_123"
+    sub_dir.mkdir()
+    
+    db_file = tmp_path / "db.json"
+    db_file.write_text('{"db_id": "123", "value": "test"}', encoding="utf-8")
+    
+    # Inject a local key via --add to join against
+    rc = main(["--add", "custom_id=123", "--join", f"{db_file}:db_id:custom_id", str(scan_dir)])
+    assert rc == 0
+    
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    entry = next((e for e in data if e["name"] == "item_123"), None)
+    assert entry is not None
+    assert entry.get("value") == "test"

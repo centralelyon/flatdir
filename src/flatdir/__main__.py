@@ -11,9 +11,9 @@ Options:
   --exclude field=value      Exclude objects precisely matching boolean parameters.
   --only field=value         Mandate object mapping fields validating correctly.
   --add field=value          Inject static metadata values sequentially across arrays.
-  --add-depth N              Conditionally restrict --add parameters only to this tree depth.
   --dict-field KEY[=FILE]    Extract KEY from FILE in each dir (FILE defaults to <dir>.json).
-  --include-json KEY[=FILE]  Embed the entire FILE payload recursively under KEY in each dir.
+  --include-json [FILE]      Embed the entire FILE payload recursively under KEY in each dir.
+  --join FILE:REM:LOC        Merge matched external database FILE entries mapping REM back to LOC.
   --match PATTERN            Apply regex validation pattern filters across filename nodes.
   --sort FIELD               Configure topological sequence ordering mapped by parameter.
   --desc                     Invert topological JSON indexing sequentially backwards.
@@ -245,6 +245,29 @@ def main(argv: list[str] | None = None) -> int:
             argv = argv[:idx] + argv[idx + 1 :]
             include_jsons.append(("include", None))
 
+    # parse --join flags (repeatable: --join FILE:REMOTE_KEY[:LOCAL_KEY])
+    joins: list[tuple[str, str, str]] = []
+    while "--join" in argv:
+        try:
+            idx = argv.index("--join")
+            raw = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+            
+            parts = raw.split(":")
+            if len(parts) == 2:
+                filename, remote_key = parts
+                local_key = "name"
+                joins.append((filename, remote_key, local_key))
+            elif len(parts) == 3:
+                filename, remote_key, local_key = parts
+                joins.append((filename, remote_key, local_key))
+            else:
+                print("error: --join requires FILE:REMOTE_KEY[:LOCAL_KEY] format", file=sys.stderr)
+                return 1
+        except IndexError:
+            print("error: --join requires a FILE:REMOTE_KEY[:LOCAL_KEY] argument", file=sys.stderr)
+            return 1
+
     # parse --match flag if present
     match: str | None = None
     if "--match" in argv:
@@ -363,6 +386,7 @@ def main(argv: list[str] | None = None) -> int:
         add_fields=add_fields or None,
         dict_fields=dict_fields or None,
         include_jsons=include_jsons or None,
+        joins=joins or None,
         match=match,
         sort_by=sort_by,
         sort_desc=sort_desc,

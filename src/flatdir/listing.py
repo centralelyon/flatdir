@@ -33,6 +33,7 @@ def list_entries(
     add_fields: dict[str, object] | None = None,
     dict_fields: list[tuple[str, str | None]] | None = None,
     include_jsons: list[tuple[str, str | None]] | None = None,
+    joins: list[tuple[str, str, str]] | None = None,
     match: str | None = None,
     sort_by: str | None = None,
     sort_desc: bool = False,
@@ -83,6 +84,10 @@ def list_entries(
             item_depth = current_depth + 1
             if add_fields and (add_depth is None or item_depth == add_depth):
                 entry.update(add_fields)
+                
+            # Apply external JSON joins if requested
+            if joins:
+                _apply_joins(entry, joins)
             if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
                 continue
             
@@ -99,9 +104,13 @@ def list_entries(
                 value = func(p, root)
                 if value is not None:
                     entry[field_name] = value
+                    
             item_depth = current_depth + 1
             if add_fields and (add_depth is None or item_depth == add_depth):
                 entry.update(add_fields)
+                
+            if joins:
+                _apply_joins(entry, joins)
             if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
                 continue
 
@@ -175,6 +184,33 @@ def _apply_include_jsons(
         # If the file exists and is valid json, we inject the whole parsed object (list, dict, string...)
         if file_data is not None: 
             entry[key] = file_data
+
+
+def _apply_joins(
+    entry: dict[str, object], 
+    joins: list[tuple[str, str, str]]
+) -> None:
+    """Enrich the entry with matching properties from an external JSON database file."""
+    for filename, remote_key, local_key in joins:
+        local_val = entry.get(local_key)
+        if local_val is None:
+            continue
+            
+        json_path = Path(filename).resolve()
+        db_data = _read_json_file(json_path)
+        
+        if isinstance(db_data, list):
+            for obj in db_data:
+                if isinstance(obj, dict) and obj.get(remote_key) is not None and str(obj.get(remote_key)) == str(local_val):
+                    for k, v in obj.items():
+                        if k != remote_key:
+                            entry[k] = v
+                    break
+        elif isinstance(db_data, dict):
+            if db_data.get(remote_key) is not None and str(db_data.get(remote_key)) == str(local_val):
+                for k, v in db_data.items():
+                    if k != remote_key:
+                        entry[k] = v
 
 
 def _excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None, p: Path, root: Path) -> bool:

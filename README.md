@@ -304,6 +304,22 @@ If no file is explicitly described, it attempts to load `<dirname>.json` by defa
 python -m flatdir . --include-json
 ```
 
+`--join FILE:REMOTE_KEY[:LOCAL_KEY]` acts as a powerful relational operator (similar to a SQL LEFT JOIN). It extracts entries dynamically from a standalone local database JSON array (or dictionary) mapped by the specified arguments, and merges their inner properties natively directly to the matching dynamically generated Flatdir outputs. 
+
+- `FILE`: Path to the standalone JSON database file (`conferences.json`). It can contain an Array or a Dictionary.
+- `REMOTE_KEY`: The key to evaluate across each element within the external `FILE` (e.g `short_name`).
+- `LOCAL_KEY` (optional): The dynamically generated key from the Flatdir runtime loop (defaults to `"name"`). 
+
+When Flatdir identifies that a mapped directory evaluates `[LOCAL_KEY] == FILE[REMOTE_KEY]`, the entire matched external JSON block is natively deeply merged to the folder JSON entry safely mapping external meta-data.
+
+```bash
+# E.g matches flatdir entries where their physical basename ("name") equals conferences.json values at "short_name"
+python -m flatdir . --join conferences.json:short_name
+
+# E.g matches flatdir entries where custom mapped prop "nom_court" matches "short_name" inside the database
+python -m flatdir . --join conferences.json:short_name:nom_court
+```
+
 `--no-defaults` to omit the default generated fields (`name`, `path`, `type`, `size`, `mtime`):
 
 ```bash
