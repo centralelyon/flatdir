@@ -131,17 +131,15 @@ def list_entries(
 
 
 @functools.lru_cache(maxsize=1024)
-def _read_dict_fields_json(json_path: Path) -> dict[str, object]:
+def _read_json_file(json_path: Path) -> object:
     if not json_path.is_file():
-        return {}
+        return None
     try:
         with open(json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            if isinstance(data, dict):
-                return data
+            return json.load(f)
     except (json.JSONDecodeError, OSError, UnicodeDecodeError):
         pass
-    return {}
+    return None
 
 
 def _apply_dict_fields(
@@ -150,14 +148,14 @@ def _apply_dict_fields(
     dict_fields: list[tuple[str, str | None]]
 ) -> None:
     """Read dict_fields logic and apply standard modifications for matching directory values."""
-    dir_name = directory_path.name
+    node_name = str(entry.get("name", directory_path.name))
 
     for key, custom_filename in dict_fields:
-        target_file = custom_filename if custom_filename else f"{dir_name}.json"
+        target_file = custom_filename if custom_filename else f"{node_name}.json"
         json_path = directory_path / target_file
         
-        file_data = _read_dict_fields_json(json_path)
-        if key in file_data:
+        file_data = _read_json_file(json_path)
+        if isinstance(file_data, dict) and key in file_data:
             entry[key] = file_data[key]
 
 
@@ -167,15 +165,15 @@ def _apply_include_jsons(
     include_jsons: list[tuple[str, str | None]]
 ) -> None:
     """Read full files and embed their entire parsed JSON dictionary under target key."""
-    dir_name = directory_path.name
+    node_name = str(entry.get("name", directory_path.name))
 
     for key, custom_filename in include_jsons:
-        target_file = custom_filename if custom_filename else f"{dir_name}.json"
+        target_file = custom_filename if custom_filename else f"{node_name}.json"
         json_path = directory_path / target_file
         
-        file_data = _read_dict_fields_json(json_path)
-        # If the file exists and has content (not empty {} from fallback), we inject the whole dict
-        if file_data: 
+        file_data = _read_json_file(json_path)
+        # If the file exists and is valid json, we inject the whole parsed object (list, dict, string...)
+        if file_data is not None: 
             entry[key] = file_data
 
 
