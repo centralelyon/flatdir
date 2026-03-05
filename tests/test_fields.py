@@ -265,3 +265,29 @@ def test_cli_pattern_pre_yr1_yr2_id_name(tmp_path: Path, capsys):
     assert entry.get("pattern_year2") == "26"
     assert entry.get("pattern_id") == "70"
     assert entry.get("pattern_name") == "Competition"
+
+
+def test_cli_pattern_yr_mo_dy_low_up(tmp_path: Path, capsys):
+    """Test the pattern_YR_MO_DY_LOW_UP.py plugin."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    
+    # Create an entry matching the pattern
+    (scan_dir / "25-09-29-Aaaa-BBBBB").mkdir()
+    
+    plugin_path = Path(__file__).parent.parent / "src" / "flatdir" / "plugins" / "pattern_YR_MO_DY_LOW_UP.py"
+    
+    rc = main(["--fields", str(plugin_path), str(scan_dir)])
+    assert rc == 0
+    
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+    
+    entry = next((e for e in data if e["name"] == "25-09-29-Aaaa-BBBBB"), None)
+    assert entry is not None
+    assert entry.get("pattern_year") == "25"
+    assert entry.get("pattern_month") == "09"
+    assert entry.get("pattern_day") == "29"
+    assert entry.get("pattern_low") == "Aaaa"
+    assert entry.get("pattern_up") == "BBBBB"
+    assert entry.get("pattern_date") == "2025-09-29"
