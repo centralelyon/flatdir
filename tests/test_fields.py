@@ -107,6 +107,40 @@ def test_cli_fields_flag(tmp_path: Path, capsys):
     assert data[0]["ext"] == ".md"
 
 
+def test_cli_multiple_fields_flag(tmp_path: Path, capsys):
+    """Multiple --fields arguments should merge all custom fields."""
+    # create two fields plugins
+    fields_file1 = tmp_path / "fields1.py"
+    fields_file1.write_text(
+        "from pathlib import Path\n"
+        "def ext(path: Path, root: Path) -> str:\n"
+        "    return path.suffix\n"
+    )
+    
+    fields_file2 = tmp_path / "fields2.py"
+    fields_file2.write_text(
+        "from pathlib import Path\n"
+        "def is_md(path: Path, root: Path) -> bool:\n"
+        "    return path.suffix == '.md'\n"
+    )
+
+    # create a directory to scan
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    (scan_dir / "notes.md").write_text("# Notes")
+
+    rc = main(["--fields", str(fields_file1), "--fields", str(fields_file2), str(scan_dir)])
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert len(data) == 1
+    assert "ext" in data[0]
+    assert data[0]["ext"] == ".md"
+    assert "is_md" in data[0]
+    assert data[0]["is_md"] is True
+
+
 def test_cli_fields_combined_with_output(tmp_path: Path):
     """--fields + --output should write enriched JSON to file."""
     fields_file = tmp_path / "my_fields.py"

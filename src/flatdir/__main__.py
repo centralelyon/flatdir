@@ -105,13 +105,16 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --output requires a file path argument", file=sys.stderr)
             return 1
 
-    # parse --fields flag if present
+    # parse --fields flags (repeatable)
     fields = None
-    if "--fields" in argv:
+    while "--fields" in argv:
         try:
             idx = argv.index("--fields")
             fields_path = argv[idx + 1]
-            fields = load_fields_file(fields_path)
+            loaded_fields = load_fields_file(fields_path)
+            if fields is None:
+                fields = {}
+            fields.update(loaded_fields)
             argv = argv[:idx] + argv[idx + 2 :]
         except IndexError:
             print("error: --fields requires a file path argument", file=sys.stderr)
