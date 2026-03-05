@@ -291,3 +291,35 @@ def test_cli_pattern_yr_mo_dy_low_up(tmp_path: Path, capsys):
     assert entry.get("pattern_low") == "Aaaa"
     assert entry.get("pattern_up") == "BBBBB"
     assert entry.get("pattern_date") == "2025-09-29"
+
+
+def test_cli_pattern_fullyr_keywords(tmp_path: Path, capsys):
+    """Test the pattern_FULLYR_KEYWORDS.py plugin."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+
+    (scan_dir / "2022-alpha-beta-gamma").mkdir()
+    (scan_dir / "no-match-here").mkdir()
+
+    plugin_path = Path(__file__).parent.parent / "src" / "flatdir" / "plugins" / "pattern_FULLYR_KEYWORDS.py"
+
+    rc = main(["--fields", str(plugin_path), str(scan_dir)])
+    assert rc == 0
+
+    out, _ = capsys.readouterr()
+    data = json.loads(out)
+
+    # Matching entry
+    entry = next((e for e in data if e["name"] == "2022-alpha-beta-gamma"), None)
+    assert entry is not None
+    assert entry.get("pattern_year") == "2022"
+    assert entry.get("pattern_keywords") == ["alpha", "beta", "gamma"]
+    assert entry.get("pattern_date") == "2022"
+
+    # Non-matching entry should return None for all pattern fields
+    no_match = next((e for e in data if e["name"] == "no-match-here"), None)
+    assert no_match is not None
+    assert no_match.get("pattern_year") is None
+    assert no_match.get("pattern_keywords") is None
+    assert no_match.get("pattern_date") is None
+
