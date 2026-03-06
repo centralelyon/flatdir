@@ -10,9 +10,12 @@ import json
 import os
 import re
 from pathlib import Path
+from typing import Callable
 
 from .plugins import defaults as _defaults
 from .plugins_loader import load_fields_file
+
+FieldFunc = Callable[[Path, Path], object]
 
 # built-in default fields, loaded once
 DEFAULT_FIELDS = load_fields_file(_defaults.__file__)
@@ -68,60 +71,42 @@ def list_entries(
             dirnames[:] = [d for d in dirnames if d not in IGNORE_DIRS and not d.endswith(".egg-info")]
             filenames = [f for f in filenames if f not in IGNORE_FILES and not f.endswith(".pyc")]
 
-        # list subdirectories at this level
-        for dirname in dirnames:
+        # process subdirectories at this level
+        # We use a copy of dirnames for iteration if we plan to prune it for os.walk
+        for dirname in list(dirnames):
             p = (base / dirname).resolve()
-            entry: dict[str, object] = {}
-            for field_name, func in all_fields.items():
-                value = func(p, root)
-                if value is not None:
-                    entry[field_name] = value
-                    
-            # Extract dict-fields if requested
-            if dict_fields:
-                _apply_dict_fields(entry, p, dict_fields)
-            
-            # Embed full json payloads if requested
-            if include_jsons:
-                _apply_include_jsons(entry, p, include_jsons)
-                
-            item_depth = current_depth + 1
-            if add_fields and (add_depth is None or item_depth == add_depth):
-                entry.update(add_fields)
-                
-            # Apply external JSON joins if requested
-            if joins:
-                _apply_joins(entry, joins)
-            if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
-                continue
-            
-            if min_depth is not None and min_depth > 0 and item_depth < min_depth:
-                continue
-                
-            entries.append(entry)
+            entry = _process_entry(
+                p, root, all_fields, 
+                current_depth + 1, min_depth, 
+                add_fields, add_depth,
+                dict_fields=dict_fields,
+                include_jsons=include_jsons,
+                joins=joins,
+                exclude=exclude,
+                only=only,
+                pattern=pattern
+            )
+            if entry:
+                entries.append(entry)
 
-        # list files at this level
+        # process files at this level
         for filename in filenames:
             p = (base / filename).resolve()
-            entry = {}
-            for field_name, func in all_fields.items():
-                value = func(p, root)
-                if value is not None:
-                    entry[field_name] = value
-                    
-            item_depth = current_depth + 1
-            if add_fields and (add_depth is None or item_depth == add_depth):
-                entry.update(add_fields)
-                
-            if joins:
-                _apply_joins(entry, joins)
-            if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
-                continue
+            entry = _process_entry(
+                p, root, all_fields, 
+                current_depth + 1, min_depth, 
+                add_fields, add_depth,
+                joins=joins,
+                exclude=exclude,
+                only=only,
+                pattern=pattern
+            )
+            if entry:
+                entries.append(entry)
 
-            if min_depth is not None and min_depth > 0 and item_depth < min_depth:
-                continue
-
-            entries.append(entry)
+        # prune dirnames for os.walk recursion if we've reached the depth limit
+        if depth is not None and depth >= 0 and current_depth == depth:
+            dirnames[:] = []
 
     # return a sorted list of entries
     sort_field = sort_by if sort_by else "name"
@@ -141,6 +126,50 @@ def list_entries(
         entries = entries[:limit]
 
     return entries
+
+
+def _process_entry(
+    p: Path,
+    root: Path,
+    all_fields: dict[str, FieldFunc],
+    item_depth: int,
+    min_depth: int | None,
+    add_fields: dict[str, object] | None,
+    add_depth: int | None,
+    dict_fields: list[tuple[str, str | None]] | None = None,
+    include_jsons: list[tuple[str, str | None]] | None = None,
+    joins: list[tuple[str, str, str]] | None = None,
+    exclude: list[tuple[str, str]] | None = None,
+    only: list[tuple[str, str]] | None = None,
+    pattern: re.Pattern[str] | None = None,
+) -> dict[str, object] | None:
+    """Process a single file or directory and return its metadata entry if it passes filters."""
+    entry: dict[str, object] = {}
+    for field_name, func in all_fields.items():
+        value = func(p, root)
+        if value is not None:
+            entry[field_name] = value
+
+    # Apply directory-only enhancements
+    if p.is_dir():
+        if dict_fields:
+            _apply_dict_fields(entry, p, dict_fields)
+        if include_jsons:
+            _apply_include_jsons(entry, p, include_jsons)
+
+    if add_fields and (add_depth is None or item_depth == add_depth):
+        entry.update(add_fields)
+
+    if joins:
+        _apply_joins(entry, joins)
+
+    if _excluded(entry, exclude, p, root) or not _included(entry, only, p, root) or not _matched(entry, pattern, p, root):
+        return None
+
+    if min_depth is not None and min_depth > 0 and item_depth < min_depth:
+        return None
+
+    return entry
 
 
 @functools.lru_cache(maxsize=1024)

@@ -29,12 +29,13 @@ def load_fields_file(filepath: str) -> dict[str, FieldFunc]:
     if not path.is_file():
         raise FileNotFoundError(f"fields file not found: {filepath}")
 
-    # import the file as a temporary module
-    spec = importlib.util.spec_from_file_location("_flatdir_fields", str(path))
+    # import the file as a temporary module with a unique name
+    module_name = f"_flatdir_fields_{path.stem}_{hash(str(path)) & 0xFFFFFFFF:08x}"
+    spec = importlib.util.spec_from_file_location(module_name, str(path))
     if spec is None or spec.loader is None:
         raise ImportError(f"cannot load fields file: {filepath}")
     module = importlib.util.module_from_spec(spec)
-    sys.modules["_flatdir_fields"] = module
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
 
     fields: dict[str, FieldFunc] = {}
@@ -45,7 +46,7 @@ def load_fields_file(filepath: str) -> dict[str, FieldFunc]:
         if inspect.isclass(obj):
             continue
         # only keep functions actually defined in this file
-        if getattr(obj, "__module__", None) != "_flatdir_fields":
+        if getattr(obj, "__module__", None) != module_name:
             continue
         fields[name] = obj
 

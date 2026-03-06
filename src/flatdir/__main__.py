@@ -36,6 +36,7 @@ import json
 import sys
 import time
 import datetime
+import shlex
 from pathlib import Path
 
 from .listing import list_entries
@@ -439,7 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         headers = {
             "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "execution_time_seconds": round(time.time() - start_time, 4),
-            "command": "python -m flatdir " + " ".join(original_argv),
+            "command": "python -m flatdir " + shlex.join(original_argv),
             "entries_count": len(entries)
         }
         out_data = {
@@ -465,7 +466,6 @@ def main(argv: list[str] | None = None) -> int:
             return 1
             
         # Extract arguments from the command string to run the current state
-        import shlex
         cmd_argv = shlex.split(command_str)[3:]
         
         # Run the command recursively to get fresh state (not using 'entries' from above
