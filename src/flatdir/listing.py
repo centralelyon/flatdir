@@ -39,6 +39,7 @@ def list_entries(
     sort_desc: bool = False,
     ignore_typical: bool = False,
     use_defaults: bool = True,
+    absolute: bool = False,
 ) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     root = root.resolve()
@@ -47,6 +48,9 @@ def list_entries(
     all_fields = dict(DEFAULT_FIELDS) if use_defaults else {}
     if fields:
         all_fields.update(fields)
+
+    if absolute and "path" in all_fields and all_fields["path"] == DEFAULT_FIELDS.get("path"):
+        all_fields["path"] = lambda p, r: str(p.parent.resolve())
 
     # compile regex pattern if match is provided
     pattern = None

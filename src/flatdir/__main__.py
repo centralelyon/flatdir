@@ -21,6 +21,7 @@ Options:
   --nested                   Build hierarchal topological directory map nodes dynamically.
   --ignore-typical           Omit standard dev environments natively (like .git, .venv).
   --no-defaults              Omit default fields (type, size, mtime) but preserve name.
+  --absolute                 Include absolute path in the path field.
   --id                       Inject an auto-incrementing integer sequence post-sorting.
   --with-headers             Envelope the JSON payload mapping runtime stats arrays.
   --help, -h                 Show this help menu and exit.
@@ -328,6 +329,13 @@ def main(argv: list[str] | None = None) -> int:
         no_defaults = True
         argv = argv[:idx] + argv[idx + 1 :]
 
+    # parse --absolute flag if present
+    absolute: bool = False
+    if "--absolute" in argv:
+        idx = argv.index("--absolute")
+        absolute = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
     # parse --id flag if present
     auto_id: bool = False
     if "--id" in argv:
@@ -395,6 +403,7 @@ def main(argv: list[str] | None = None) -> int:
         sort_desc=sort_desc,
         ignore_typical=ignore_typical,
         use_defaults=not no_defaults,
+        absolute=absolute,
     )
 
     if auto_id:

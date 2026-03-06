@@ -107,6 +107,22 @@ def test_cli_fields_flag(tmp_path: Path, capsys):
     assert data[0]["ext"] == ".md"
 
 
+def test_cli_absolute_flag(tmp_path: Path, capsys):
+    """--absolute should output absolute paths instead of relative."""
+    scan_dir = tmp_path / "data"
+    scan_dir.mkdir()
+    (scan_dir / "notes.md").write_text("# Notes")
+
+    rc = main(["--absolute", str(scan_dir)])
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert len(data) == 1
+    assert data[0]["name"] == "notes.md"
+    assert data[0]["path"] == str(scan_dir.resolve())
+
+
 def test_cli_multiple_fields_flag(tmp_path: Path, capsys):
     """Multiple --fields arguments should merge all custom fields."""
     # create two fields plugins
