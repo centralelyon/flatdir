@@ -1,6 +1,7 @@
 """Command-line entrypoint for flatdir: print directory listing as JSON.
 
 Usage: python -m flatdir [OPTIONS] [path]
+       python -m flatdir diff FILE.json
 
 Options:
   --limit N                  Limit the number of entries returned to N.
@@ -39,6 +40,7 @@ from pathlib import Path
 
 from .listing import list_entries
 from .plugins_loader import load_fields_file
+from .compare import compare_entries
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -48,6 +50,10 @@ def main(argv: list[str] | None = None) -> int:
     if "--help" in argv or "-h" in argv:
         print(__doc__)
         return 0
+
+    if argv and argv[0] == "diff":
+        # Handled later after flag parsing
+        pass
 
     original_argv = list(argv)
     
@@ -105,6 +111,19 @@ def main(argv: list[str] | None = None) -> int:
         except (IndexError, ValueError):
             print("error: --output requires a file path argument", file=sys.stderr)
             return 1
+
+    # parse diff subcommand if present
+    diff_json_path: str | None = None
+    if "diff" in argv:
+        idx = argv.index("diff")
+        if idx + 1 < len(argv):
+            diff_json_path = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        else:
+            print("error: diff requires a JSON file argument", file=sys.stderr)
+            return 1
+
+    # parse --fields flags (repeatable)
 
     # parse --fields flags (repeatable)
     fields = None
@@ -427,6 +446,52 @@ def main(argv: list[str] | None = None) -> int:
             "headers": headers,
             "entries": out_data
         }
+
+    if diff_json_path:
+        try:
+            with open(diff_json_path, "r", encoding="utf-8") as f:
+                old_data = json.load(f)
+        except Exception as e:
+            print(f"error reading JSON file for diff: {e}", file=sys.stderr)
+            return 1
+            
+        if not isinstance(old_data, dict) or "headers" not in old_data or "entries" not in old_data:
+            print("error: diff source JSON must have 'headers' and 'entries' (use --with-headers)", file=sys.stderr)
+            return 1
+            
+        command_str = old_data["headers"].get("command", "")
+        if not command_str.startswith("python -m flatdir"):
+            print("error: diff source headers must contain a valid flatdir command", file=sys.stderr)
+            return 1
+            
+        # Extract arguments from the command string to run the current state
+        import shlex
+        cmd_argv = shlex.split(command_str)[3:]
+        
+        # Run the command recursively to get fresh state (not using 'entries' from above
+        # because the current execution flags might differ from the original command in the JSON)
+        import io
+        from contextlib import redirect_stdout
+        
+        capture = io.StringIO()
+        with redirect_stdout(capture):
+            try:
+                main(cmd_argv)
+            except SystemExit:
+                pass
+        
+        try:
+            new_data = json.loads(capture.getvalue())
+        except Exception as e:
+            print(f"error parsing current state output: {e}", file=sys.stderr)
+            return 1
+            
+        new_entries = new_data["entries"] if isinstance(new_data, dict) and "entries" in new_data else new_data
+        if not isinstance(new_entries, list):
+            print("error: comparison command did not return a list of entries", file=sys.stderr)
+            return 1
+            
+        out_data = compare_entries(old_data["entries"], new_entries)
 
     # write JSON to output file or stdout
     if output is not None:
