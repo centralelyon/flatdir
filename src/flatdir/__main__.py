@@ -182,24 +182,22 @@ def main(argv: list[str] | None = None) -> int:
             idx = argv.index("--only")
             raw = argv[idx + 1]
             argv = argv[:idx] + argv[idx + 2 :]
-            if "=" not in raw:
-                print(
-                    "error: --only requires field=value format",
-                    file=sys.stderr,
-                )
-                return 1
-            field_name, _, value = raw.partition("=")
-            if value.startswith("[") and value.endswith("]"):
-                try:
-                    for v in json.loads(value):
-                        only.append((field_name, str(v)))
-                    continue
-                except json.JSONDecodeError:
-                    for v in value[1:-1].split(","):
-                        if v.strip():
-                            only.append((field_name, v.strip().strip("'\"")))
-                    continue
-            only.append((field_name, value))
+            if "=" in raw:
+                field_name, _, value = raw.partition("=")
+                if value.startswith("[") and value.endswith("]"):
+                    try:
+                        for v in json.loads(value):
+                            only.append((field_name, str(v)))
+                        continue
+                    except json.JSONDecodeError:
+                        for v in value[1:-1].split(","):
+                            if v.strip():
+                                only.append((field_name, v.strip().strip("'\"")))
+                        continue
+                only.append((field_name, value))
+            else:
+                # Existence check: only the field name is provided
+                only.append((raw, None))
         except IndexError:
             print("error: --only requires a field=value argument", file=sys.stderr)
             return 1

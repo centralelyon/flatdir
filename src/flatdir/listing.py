@@ -280,7 +280,15 @@ def _included(entry: dict[str, object], only: list[tuple[str, str]] | None, p: P
             func = getattr(_defaults, f)
             if callable(func):
                 entry_val = func(p, root)
-        if str(entry_val if entry_val is not None else "") not in values:
+        
+        # If None is in values, it means we only require the field to exist (not be None)
+        if None in values:
+            if entry_val is None:
+                return False
+            # If there are other values besides None, at least one of them must also match
+            if len(values) > 1 and str(entry_val) not in [v for v in values if v is not None]:
+                return False
+        elif str(entry_val if entry_val is not None else "") not in values:
             return False
             
     return True
