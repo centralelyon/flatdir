@@ -159,6 +159,12 @@ python -m flatdir . --exclude type=directory
 python -m flatdir . --only type=file --only ext=.py
 ```
 
+You can also filter by field existence by omitting the `=` sign. This is useful for plugins:
+
+```bash
+python -m flatdir . --fields my_fields.py --only line_count
+```
+
 You can also pass arrays inline formatted as `[value1,value2]` or strictly valid JSON `["value1", "value2"]`. This behaves identically to passing multiple arguments for the same field (OR logic):
 
 ```bash
@@ -365,6 +371,12 @@ The resulting JSON is:
         ...
     ]
 }
+```
+
+Additional fields can be added as plugins. See `src/flatdir/plugins` for examples. But you can also use other tools to add fields to the JSON output. For example, you can use [`ntt`](https://github.com/centralelyon/ntt) to add EXIF data to the JSON output:
+
+```bash
+!python -m flatdir . --match "\.jpg$" --depth 0 | python -m ntt enrich_exif --json -
 ```
 
 ## Examples of use case
