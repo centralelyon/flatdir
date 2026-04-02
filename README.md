@@ -10,7 +10,7 @@ A simple example with the following directory structure:
 └── file_2.txt
 ```
 
-It generates the following flat array of dicts as a JSON file:
+..it generates the following flat array of dicts as a JSON file:
 
 ```
 [
@@ -87,7 +87,8 @@ python -m flatdir . --limit 10
 python -m flatdir . --depth 2
 ```
 
-`--output FILE` to write the result to a file:
+`--output FILE` to write the result to a file (similar to `>` in bash):
+
 
 ```bash
 python -m flatdir . --output flat.json
@@ -99,9 +100,7 @@ python -m flatdir . --output flat.json
 python -m flatdir . --fields my_fields.py
 ```
 
-The plugin file is a Python file where each public function becomes a JSON field.
-Each function receives the entry `Path` and the `root` directory path.
-Return `None` to omit the field from the output:
+The plugin file is a Python file where each public function becomes a JSON field. Each function receives the entry `Path` and the `root` directory path. Examples of fields are provided in the `src/flatdir/plugins/` directory. Below is  an example of a plugin file (return `None` to omit the field from the output):
 
 ```python
 # my_fields.py
@@ -140,6 +139,12 @@ Output (both files and directories are listed):
 
 The default fields (`name`, `path`, `type`, `mtime`, `size`) are themselves plugins defined
 in `src/flatdir/plugins/defaults.py`. Additional examples are in `src/flatdir/plugins/`.
+
+So by default, flatdir will run the following plugins:
+
+```
+python -m flatdir . --fields src/flatdir/plugins/defaults.py
+```
 
 All options can be combined:
 
