@@ -25,6 +25,8 @@ Options:
   --absolute                 Include absolute path in the path field.
   --id                       Inject an auto-incrementing integer sequence post-sorting.
   --with-headers             Envelope the JSON payload mapping runtime stats arrays.
+  --ics                      Convert an ICS file to flatdir JSON entries.
+  --ics-component NAME       ICS component to emit (default: VEVENT). Use ALL for every component.
   --subfolders-whitelist S   Comma-separated folder names kept by the subfolders plugin.
   --subfolders-separator S   Separator for --subfolders-whitelist (default: comma).
   --pattern-id-separator S   Separator used by the pattern_ids plugin (default: hyphen).
@@ -115,6 +117,23 @@ def main(argv: list[str] | None = None) -> int:
             argv = argv[:idx] + argv[idx + 2 :]
         except (IndexError, ValueError):
             print("error: --output requires a file path argument", file=sys.stderr)
+            return 1
+
+    # parse ICS conversion flags
+    ics_mode = False
+    if "--ics" in argv:
+        idx = argv.index("--ics")
+        ics_mode = True
+        argv = argv[:idx] + argv[idx + 1 :]
+
+    ics_component = "VEVENT"
+    if "--ics-component" in argv:
+        try:
+            idx = argv.index("--ics-component")
+            ics_component = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --ics-component requires a value", file=sys.stderr)
             return 1
 
     # parse plugin configuration flags
@@ -416,9 +435,18 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     path = Path(positionals[0]) if positionals else Path(".")
+    if path.is_file() and path.suffix.lower() in {".ics", ".ical"}:
+        ics_mode = True
 
-    # error in case of missing path or path is not a directory
-    if not path.exists() or not path.is_dir():
+    if not path.exists():
+        print(f"path does not exist: {path}", file=sys.stderr)
+        return 2
+
+    if ics_mode:
+        if not path.is_file():
+            print(f"path is not an ICS file: {path}", file=sys.stderr)
+            return 2
+    elif not path.is_dir():
         print(f"path is not a directory: {path}", file=sys.stderr)
         return 2
 
@@ -444,26 +472,39 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # generate the actual list of entries to be returned as JSON
-    entries = list_entries(
-        path,
-        limit=limit,
-        depth=depth,
-        min_depth=min_depth,
-        add_depth=add_depth,
-        fields=fields,
-        exclude=exclude or None,
-        only=only or None,
-        add_fields=add_fields or None,
-        dict_fields=dict_fields or None,
-        include_jsons=include_jsons or None,
-        joins=joins or None,
-        match=match,
-        sort_by=sort_by,
-        sort_desc=sort_desc,
-        ignore_typical=ignore_typical,
-        use_defaults=not no_defaults,
-        absolute=absolute,
-    )
+    if ics_mode:
+        from .ics import list_ics_entries
+
+        entries = list_ics_entries(path, component=ics_component)
+        if add_fields and add_depth is None:
+            for entry in entries:
+                entry.update(add_fields)
+        entries = _filter_json_entries(entries, exclude or None, only or None)
+        if sort_by:
+            entries.sort(key=lambda entry: _json_sort_value(entry.get(sort_by)), reverse=sort_desc)
+        if limit is not None and limit >= 0:
+            entries = entries[:limit]
+    else:
+        entries = list_entries(
+            path,
+            limit=limit,
+            depth=depth,
+            min_depth=min_depth,
+            add_depth=add_depth,
+            fields=fields,
+            exclude=exclude or None,
+            only=only or None,
+            add_fields=add_fields or None,
+            dict_fields=dict_fields or None,
+            include_jsons=include_jsons or None,
+            joins=joins or None,
+            match=match,
+            sort_by=sort_by,
+            sort_desc=sort_desc,
+            ignore_typical=ignore_typical,
+            use_defaults=not no_defaults,
+            absolute=absolute,
+        )
 
     if auto_id:
         for index, entry in enumerate(entries, start=1):
@@ -541,6 +582,55 @@ def main(argv: list[str] | None = None) -> int:
         json.dump(out_data, sys.stdout, ensure_ascii=False, indent=4)
         _ = sys.stdout.write("\n")
     return 0
+
+
+def _filter_json_entries(
+    entries: list[dict[str, object]],
+    exclude: list[tuple[str, str]] | None,
+    only: list[tuple[str, str | None]] | None,
+) -> list[dict[str, object]]:
+    return [
+        entry
+        for entry in entries
+        if not _json_entry_excluded(entry, exclude) and _json_entry_included(entry, only)
+    ]
+
+
+def _json_entry_excluded(entry: dict[str, object], exclude: list[tuple[str, str]] | None) -> bool:
+    if not exclude:
+        return False
+    return any(_json_value_matches(entry.get(field_name), value) for field_name, value in exclude)
+
+
+def _json_entry_included(entry: dict[str, object], only: list[tuple[str, str | None]] | None) -> bool:
+    if not only:
+        return True
+    for field_name, value in only:
+        if field_name not in entry:
+            return False
+        if value is not None and not _json_value_matches(entry.get(field_name), value):
+            return False
+    return True
+
+
+def _json_value_matches(entry_value: object, value: str) -> bool:
+    if isinstance(entry_value, list):
+        return any(_json_value_matches(item, value) for item in entry_value)
+    if isinstance(entry_value, dict):
+        if "value" in entry_value:
+            return str(entry_value["value"]) == value
+        return False
+    return str(entry_value if entry_value is not None else "") == value
+
+
+def _json_sort_value(value: object) -> tuple[int, object]:
+    if value is None:
+        return (0, "")
+    if isinstance(value, dict) and "value" in value:
+        value = value["value"]
+    if isinstance(value, (int, float)):
+        return (1, value)
+    return (2, str(value).lower())
 
 
 def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:

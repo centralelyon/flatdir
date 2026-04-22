@@ -165,6 +165,33 @@ python -m flatdir . \
   --only pattern_prefix=PAr
 ```
 
+`--ics` converts an iCalendar file to flatdir JSON. Each selected ICS component becomes one JSON entry. By default flatdir emits `VEVENT` entries; use `--ics-component NAME` to select another component, or `--ics-component ALL` to emit every component except the root `VCALENDAR`. ICS property names are preserved as JSON keys, for example `UID`, `DTSTART`, `DTEND`, `SUMMARY`, `ATTENDEE`, and nested components such as `VALARM`.
+
+```bash
+python -m flatdir calendar.ics --ics --output calendar.json
+```
+
+An `.ics` or `.ical` file path is auto-detected, so this is equivalent:
+
+```bash
+python -m flatdir calendar.ics > calendar.json
+```
+
+Example output:
+
+```json
+[
+    {
+        "BEGIN": "VEVENT",
+        "DTSTART": "20260422T070000Z",
+        "DTEND": "20260422T080000Z",
+        "UID": "event-one@example.com",
+        "SUMMARY": "Project review",
+        "END": "VEVENT"
+    }
+]
+```
+
 `--exclude` to exclude entries based on a field value:
 
 ```bash
