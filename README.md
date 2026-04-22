@@ -390,6 +390,8 @@ Additional fields can be added as plugins. See `src/flatdir/plugins` for example
 
 - Continuous observation within your directory by using Meta's [`watchman`](https://facebook.github.io/watchman/) tool with first `watchman watch` and then trigger the rebuild script matching any pattern changes `watchman-make -p '**/*' --run 'python -m flatdir . --output index.json'`
 
+- Validate your file inventory with [Great Expectations](https://greatexpectations.io/): generate a flat JSON index with `python -m flatdir . --output index.json`, load it as a pandas DataFrame, and define expectations on file metadata (entry count, naming conventions, allowed extensions, size thresholds, etc.) to detect structural regressions in your dataset directories. See [`examples/validate_with_great_expectations.py`](examples/validate_with_great_expectations.py) for a ready-to-run example.
+
 ## Similar or related tools
 
 - [jq](https://jqlang.org/) - A command-line JSON processor that can be used to manipulate and query JSON data, including file metadata.
