@@ -152,6 +152,19 @@ All options can be combined:
 python -m flatdir . --depth 0 --limit 10 --fields my_fields.py --output result.json
 ```
 
+Some bundled plugins accept command-line configuration. `subfolders.py` returns immediate child directories and can be filtered with `--subfolders-whitelist`; `pattern_ids.py` splits the `pattern_id` produced by `pattern_PRE_YR1_YR2_ID_NAME.py` with `--pattern-id-separator`:
+
+```bash
+python -m flatdir . \
+  --fields src/flatdir/plugins/pattern_PRE_YR1_YR2_ID_NAME.py \
+  --fields src/flatdir/plugins/subfolders.py \
+  --fields src/flatdir/plugins/pattern_ids.py \
+  --subfolders-whitelist SUBFOLDER1,SUBFOLDER2,SUBFOLDER3 \
+  --pattern-id-separator _ \
+  --only type=directory \
+  --only pattern_prefix=PAr
+```
+
 `--exclude` to exclude entries based on a field value:
 
 ```bash

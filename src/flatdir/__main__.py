@@ -25,6 +25,9 @@ Options:
   --absolute                 Include absolute path in the path field.
   --id                       Inject an auto-incrementing integer sequence post-sorting.
   --with-headers             Envelope the JSON payload mapping runtime stats arrays.
+  --subfolders-whitelist S   Comma-separated folder names kept by the subfolders plugin.
+  --subfolders-separator S   Separator for --subfolders-whitelist (default: comma).
+  --pattern-id-separator S   Separator used by the pattern_ids plugin (default: hyphen).
   --help, -h                 Show this help menu and exit.
 
 path Defaults to the current directory '.'
@@ -42,6 +45,7 @@ from pathlib import Path
 from .listing import list_entries
 from .plugins_loader import load_fields_file
 from .compare import compare_entries
+from .plugins import options as plugin_options
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -111,6 +115,37 @@ def main(argv: list[str] | None = None) -> int:
             argv = argv[:idx] + argv[idx + 2 :]
         except (IndexError, ValueError):
             print("error: --output requires a file path argument", file=sys.stderr)
+            return 1
+
+    # parse plugin configuration flags
+    subfolders_whitelist: str | None = None
+    if "--subfolders-whitelist" in argv:
+        try:
+            idx = argv.index("--subfolders-whitelist")
+            subfolders_whitelist = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --subfolders-whitelist requires a value", file=sys.stderr)
+            return 1
+
+    subfolders_separator = ","
+    if "--subfolders-separator" in argv:
+        try:
+            idx = argv.index("--subfolders-separator")
+            subfolders_separator = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --subfolders-separator requires a value", file=sys.stderr)
+            return 1
+
+    pattern_id_separator = "-"
+    if "--pattern-id-separator" in argv:
+        try:
+            idx = argv.index("--pattern-id-separator")
+            pattern_id_separator = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except IndexError:
+            print("error: --pattern-id-separator requires a value", file=sys.stderr)
             return 1
 
     # parse diff subcommand if present
@@ -401,6 +436,12 @@ def main(argv: list[str] | None = None) -> int:
             fields["path"] = _defaults.path
         if "name" not in fields:
             fields["name"] = _defaults.name
+
+    plugin_options.set_options(
+        subfolders_whitelist=subfolders_whitelist,
+        subfolders_separator=subfolders_separator,
+        pattern_id_separator=pattern_id_separator,
+    )
 
     # generate the actual list of entries to be returned as JSON
     entries = list_entries(

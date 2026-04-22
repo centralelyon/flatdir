@@ -15,10 +15,11 @@ _cache: dict[Path, dict[str, str | None] | None] = {}
 def _parse_generic_pattern(name: str) -> dict[str, str | None] | None:
     """A generic parser that can be adapted for similar patterns.
     
-    Matches patterns like: [Prefix]-[Year1]-[Year2]-[ID]-[Name]
+    Matches patterns like: [Prefix]-[Year1]-[Year2]-[ID]-[Name].
+    ID can be a single number or a numeric ID string such as 105_106.
     Extracts the parts.
     """
-    match = re.search(r'^([A-Za-z0-9]+)-(\d{2})-(\d{2})-(\d+)-(.+)$', name)
+    match = re.search(r'^([A-Za-z0-9]+)-(\d{2})-(\d{2})-(\d+(?:[-_+,.]\d+)*)-(.+)$', name)
     if not match:
         return None
         
