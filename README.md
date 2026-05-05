@@ -94,6 +94,12 @@ python -m flatdir . --depth 2
 python -m flatdir . --output flat.json
 ```
 
+`--diff FILE` to compare the current result with a previously generated flatdir JSON file and output only added, removed, or modified entries:
+
+```bash
+python -m flatdir . --diff flat.json
+```
+
 `--fields FILE` to add custom fields via a plugin file:
 
 ```bash

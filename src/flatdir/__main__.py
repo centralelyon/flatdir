@@ -8,6 +8,7 @@ Options:
   --depth N                  Limit the directory traversal depth to max N.
   --min-depth N              Filter out objects positioned shallower than depth N.
   --output FILE              Write the JSON output to FILE instead of stdout.
+  --diff FILE                Compare the current flatdir result with FILE and output only changes.
   --fields FILE              Path to a python file defining custom formatting.
   --exclude field=value      Exclude objects precisely matching boolean parameters.
   --only field=value         Mandate object mapping fields validating correctly.
@@ -119,6 +120,17 @@ def main(argv: list[str] | None = None) -> int:
             print("error: --output requires a file path argument", file=sys.stderr)
             return 1
 
+    # parse --diff flag if present
+    compare_json_path: str | None = None
+    if "--diff" in argv:
+        try:
+            idx = argv.index("--diff")
+            compare_json_path = argv[idx + 1]
+            argv = argv[:idx] + argv[idx + 2 :]
+        except (IndexError, ValueError):
+            print("error: --diff requires a file path argument", file=sys.stderr)
+            return 1
+
     # parse ICS conversion flags
     ics_mode = False
     if "--ics" in argv:
@@ -177,6 +189,10 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print("error: diff requires a JSON file argument", file=sys.stderr)
             return 1
+
+    if compare_json_path is not None and diff_json_path is not None:
+        print("error: use either --diff FILE or diff FILE.json, not both", file=sys.stderr)
+        return 1
 
     # parse --fields flags (repeatable)
 
@@ -510,13 +526,23 @@ def main(argv: list[str] | None = None) -> int:
         for index, entry in enumerate(entries, start=1):
             entry["id"] = index
 
-    out_data: object = entries
-    if tree:
-        out_data = _build_tree(entries, path.name)
-    elif nested:
-        out_data = _build_nested(entries)
+    if compare_json_path:
+        try:
+            previous_entries = _load_flatdir_entries_for_diff(compare_json_path)
+        except ValueError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        out_data = compare_entries(previous_entries, entries)
+    else:
+        out_data = entries
 
-    if with_headers:
+    if compare_json_path is None:
+        if tree:
+            out_data = _build_tree(entries, path.name)
+        elif nested:
+            out_data = _build_nested(entries)
+
+    if with_headers and compare_json_path is None:
         headers = {
             "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "execution_time_seconds": round(time.time() - start_time, 4),
@@ -631,6 +657,27 @@ def _json_sort_value(value: object) -> tuple[int, object]:
     if isinstance(value, (int, float)):
         return (1, value)
     return (2, str(value).lower())
+
+
+def _load_flatdir_entries_for_diff(json_path: str) -> list[dict[str, object]]:
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as exc:
+        raise ValueError(f"error reading diff source JSON: {exc}") from exc
+
+    if isinstance(data, list):
+        if all(isinstance(entry, dict) for entry in data):
+            return data
+        raise ValueError("diff source JSON list must contain only object entries")
+
+    if isinstance(data, dict) and "entries" in data:
+        entries = data["entries"]
+        if isinstance(entries, list) and all(isinstance(entry, dict) for entry in entries):
+            return entries
+        raise ValueError("diff source JSON object must contain a list of object entries under 'entries'")
+
+    raise ValueError("diff source JSON must be a flatdir list or an object containing an 'entries' list")
 
 
 def _build_nested(entries: list[dict[str, object]]) -> dict[str, object]:
