@@ -1,9 +1,9 @@
 """Comparison logic for flatdir entries."""
 
 from __future__ import annotations
-from enum import StrEnum
+from enum import Enum
 
-class status(StrEnum):
+class status(str, Enum):
     """Status of an entry comparison."""
     ADDED = "added"
     REMOVED = "removed"
