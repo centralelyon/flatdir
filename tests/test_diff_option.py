@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from flatdir.__main__ import main
+from flatdir import compare
 
 
 def test_diff_option_with_plain_flatdir_json(tmp_path: Path, capsys):
@@ -56,3 +57,40 @@ def test_diff_option_requires_file_argument(capsys):
 
     _, err = capsys.readouterr()
     assert "--diff requires a file path argument" in err
+
+
+def test_compare_entries(tmp_path: Path):
+    """Test the compare_entries function with added, removed, and modified entries."""
+    old_entries = [
+        {"path": ".", "name": "file1.txt", "size": 100},
+        {"path": ".", "name": "file2.txt", "size": 200},
+        {"path": ".", "name": "file3.txt", "size": 300},
+    ]
+    
+    new_entries = [
+        {"path": ".", "name": "file1.txt", "size": 100},  # unchanged
+        {"path": ".", "name": "file2.txt", "size": 250},  # modified
+        # file3.txt is removed
+        {"path": ".", "name": "file4.txt", "size": 400},  # added
+    ]
+    
+    result = compare.compare_entries(old_entries, new_entries)
+
+    assert len(result) == 3
+
+    by_key = {(entry["path"], entry["name"]): entry for entry in result}
+
+    # Check added entry
+    assert (".", "file4.txt") in by_key
+    assert by_key[(".", "file4.txt")]["size"] == 400
+    assert by_key[(".", "file4.txt")]["_status"] == compare.status.ADDED
+
+    # Check removed entry
+    assert (".", "file3.txt") in by_key
+    assert by_key[(".", "file3.txt")]["size"] == 300
+    assert by_key[(".", "file3.txt")]["_status"] == compare.status.REMOVED
+
+    # Check modified entry
+    assert (".", "file2.txt") in by_key
+    assert by_key[(".", "file2.txt")]["size"] == 250
+    assert by_key[(".", "file2.txt")]["_status"] == compare.status.MODIFIED
